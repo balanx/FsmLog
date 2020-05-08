@@ -1,0 +1,298 @@
+
+import sys
+import os
+
+help='''
+
+usage : fsmlog [source]
+
+'''
+
+class FsmLog():
+    name = 'fsm'
+    clock  = [  'clk', 'posedge']
+    reset  = ['rst_n', 'negedge']  # [] is None
+    enable = ['en', "1'b1"]        # [] is None
+    tab  = '  '
+
+    def __init__(self, machine=[[]], export=[[]], vars=[[],[],[]]):
+        self.machine = machine
+        self.export  = export
+        self.vars    = vars
+
+    def dot(self):
+        txt = 'digraph fsm {\nrankdir=LR size="8,5"\n'
+        txt += '"@FsmLog"[shape = "plaintext"]\n\n'
+
+        #######################
+        # Edges
+        #
+        nodes={}
+        for i in self.machine:     # machine1, machine2
+            for j in i:  # node1, node2
+                nodes[j[0]]= j[0] + '\\n'
+                n = len(j)
+                if n%2==0:
+                    print('Error: missing items at machine of ', j[0])
+                for k in range(1,n,2):
+                    next = j[k]
+                    cond = j[k+1]
+                    edge = j[0] + '->' + next + '[label="' + cond + '"]\n'
+                    txt += edge
+
+        txt += '\n'
+
+        #######################
+        # hold collection
+        #
+        mode = {}
+        for i in self.vars[1]: # output
+            mode[i[0]] = i[3]
+
+        for i in self.vars[2]: # inner vars
+            mode[i[0]] = i[3]
+
+
+        #######################
+        # Nodes
+        #
+        for i in self.export:       # exp1, exp2
+            for j in i:             # v1, v2
+                v = j[0]            # var name
+                h = mode[v]         # hold
+                for k in range(1, len(j), 2):   # out1, out2
+                    if h == 1:
+                        nodes[j[k]] += '\\n' + v + '=' + j[k+1]
+                    else:
+                        nodes[j[k]] += '\\n' + v + '(' + j[k+1] + ')'
+
+        for d,x in nodes.items():   # node1, node2
+            txt += d + '[label="' + x + '"]\n'
+
+        txt += '} // @FsmLog'
+        return txt
+
+    def log2(self, n):
+        i = 1
+        while (2**i < n) and (i < 32):
+            i += 1
+
+        return i
+
+    def hdl(self):
+        always = 'always @(' + self.clock[1] + ' ' + self.clock[0]
+        if self.reset != []:
+            always += ' or ' + self.reset[1] + ' ' + self.reset[0] + ')\nif ('
+            if self.reset[1] == 'negedge':
+                always += '!'
+
+            always += self.reset[0]
+
+        always += ')'
+
+        #######################
+        # output definition
+        #
+        init = {}
+        txt = '\nmodule ' + self.name + ' (\n'
+        for i in self.vars[1]:
+            txt += self.tab + 'output reg '
+            init[i[0]] = [str(i[1]) + "'d" + str(i[2]), i[3] ]  # i[3]=hold
+            if i[1]>1:
+                txt += '[' + str(i[1]-1) + ':0] '
+            else:
+                txt += self.tab
+
+            txt += i[0] + ' = ' + init[i[0]][0] + ','
+            if i[3] == 1:
+                txt += ' // hold\n'
+            else:
+                txt += '\n'
+
+        #######################
+        # input definition
+        #
+        for i in self.vars[0]:
+            txt += self.tab + 'input      '
+            if i[1]>1:
+                txt += '[' + str(i[1]-1) + ':0] ' + i[0] + ',\n'
+            else:
+                txt += self.tab + i[0] + ',\n'
+
+        txt += '\n'
+        if self.enable != []:
+            txt += self.tab + 'input' + self.tab*2 + self.enable[0] + ',\n'
+
+        txt += self.tab + 'input' + self.tab*2 + self.clock[0]
+        if self.reset != []:
+            txt += ',\n' + self.tab + 'input' + self.tab*2 + self.reset[0]
+
+        txt += '\n);\n\n'
+
+        #######################
+        # inner vars definition
+        #
+        for i in self.vars[2]:
+            init[i[0]] = [str(i[1]) + "'d" + str(i[2]), i[3] ]
+            txt += 'reg '
+            if i[1]>1:
+                txt += '[' + str(i[1]-1) + ':0] '
+            else:
+                txt += self.tab
+            #
+            txt += i[0] + ' = ' + init[i[0]][0] + ';'
+            if i[3] == 1:
+                txt += ' // hold\n'
+            else:
+                txt += '\n'
+            #
+
+        #print(init)
+
+        #######################
+        # state definition
+        #
+        m = 1
+        for i in self.machine:      # machine1, machine2
+            st = 'state' + str(m)
+            nx =  'next' + str(m)
+            width =  self.log2(len(i))
+
+            txt += '\nlocalparam'
+            n = 0
+            for j in i:   # node1, node2
+                txt += '\n' + j[0] + ' = ' + str(width) + "'d" + str(n) + ','
+                n += 1
+
+            txt = txt[:-1]  # delete the last ','
+            txt += ';\n\nreg [' + str(width - 1) + ':0] ' + st + ', ' + nx + ';\n'
+
+            txt += always + '\n'
+            if self.reset != []:
+                txt += self.tab + st + ' <= ' + i[0][0] + ';\nelse '
+
+            if self.enable != []:
+                txt += 'if (' + self.enable[0] + ' == ' + self.enable[1] + ')\n'
+            elif self.reset != []:
+                txt = txt[:-1] + '\n'
+
+            txt += self.tab + st + ' <= ' + nx + ';\n\n'
+            m += 1
+
+
+        #######################
+        # next-state block
+        #
+        m = 1
+        for i in self.machine:       # fsm1, fsm2
+            st = 'state' + str(m)
+            nx =  'next' + str(m)
+            txt += '\nalways @(*) begin\n'
+            txt += self.tab + nx + ' = ' + st + ';\n\n'
+            txt += self.tab + 'case(' + st + ')\n'
+
+            for j in i:  # node1, node2
+                txt += self.tab*2 + j[0] + ' :\n'
+                n = len(j)
+                if n%2==0:
+                    print('Error: missing items at machine of ', j[0])
+                    sys.exit(0)
+                for k in range(1,n,2):
+                    next = j[k]
+                    cond = j[k+1]
+                    if cond == '':
+                        if k > 1:
+                            txt += self.tab*3 + 'else\n'
+                    elif k > 1:
+                        txt += self.tab*3 + 'else if (' + cond + ')\n'
+                    else:
+                        txt += self.tab*3 + 'if (' + cond + ')\n'
+
+                    txt += self.tab*4 + nx + ' = ' + next + ';\n'
+
+            txt += self.tab*2 + 'default :\n' + self.tab*4 + nx + ' = ' + i[0][0] + ';\n'
+            txt += self.tab + 'endcase\nend\n'
+            m += 1
+
+        #sys.exit(0)
+        #######################
+        # export block
+        #
+        m = 1
+        for i in self.export:
+            st = 'state' + str(m)
+
+            txt += '\n' + always + ' begin\n'
+            if self.reset != []:
+                for j in i:             # v1, v2
+                    txt += self.tab + j[0] + ' <= ' + init[j[0]][0] + ';\n'
+                #
+                txt += 'end\nelse begin\n'
+
+            nodes = {}
+            for j in i:                 # v1, v2
+                for k in range(1, len(j), 2):
+                    nodes[j[k]] = ''
+
+            for j in i:                 # v1, v2
+                if init[j[0]][1] == 0:  # NOT hold
+                    txt += self.tab + j[0] + ' <= ' + init[j[0]][0] + ';\n'
+                #
+                for k in range(1, len(j), 2):
+                    nodes[j[k]] += self.tab*4 + j[0] + ' <= ' + j[k+1] + ';\n'
+
+            txt += '\n' + self.tab + 'case (' + st + ')\n'
+            for k,x in nodes.items():
+                txt += self.tab*2 + k + ' : begin\n' + x + self.tab*3 + 'end\n'
+
+
+            txt += '\n' + self.tab + 'endcase\nend\n'
+            m += 1
+
+        #######################
+        # misc
+        #
+
+        txt += '\nendmodule // @FsmLog\n'
+
+        return txt
+
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'r') as file:
+            exec(file.read())
+    else:
+        print(help)
+        sys.exit(0)
+
+    fdir, full_fn = os.path.split(sys.argv[1])
+    fn = os.path.splitext(full_fn)[0]  # module name
+    if fdir == '': fdir = '.'
+    #print(fdir, full_fn, fn)
+
+    fg = FsmLog(MACHINE, EXPORT, VARS)
+    fg.name = fn
+    fg.reset = []
+    #fg.enable = []
+
+    src = fg.dot()
+    with open(fdir + '/' + fn + '.dot', 'w') as file:
+        file.write(src)
+        print("Dot is OK.")
+
+    src = fg.hdl()
+    with open(fdir + '/' + fn + '.v', 'w') as file:
+        file.write(src)
+        print("HDL is OK.")
+
+    if os.path.exists(CONFIG[0]):
+        os.system(CONFIG[0] + ' -Tpng ' +
+                    fdir + '/' + fn +'.dot -o ' +
+                    fdir + '/' + fn + '.png')
+        print("Image is OK.")
+    else:
+        print("'dot.exe' NOT found.")
+
+    sys.exit(0)
