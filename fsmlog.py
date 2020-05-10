@@ -50,7 +50,7 @@ class FsmLog():
                 v = j[0]            # var name
                 h = j[1]            # hold
                 for k in range(2, len(j), 2):   # out1, out2
-                    if h == 0:
+                    if h == '0':
                         nodes[j[k]] += '\\n' + v + '=' + j[k+1]
                     else:
                         nodes[j[k]] += '\\n' + v + '(' + j[k+1] + ')'
@@ -92,12 +92,13 @@ class FsmLog():
         txt = '\nmodule ' + self.name + ' (\n'
         for i in self.vars[1]:
             txt += self.tab + 'output reg '
-            init[i[0]] = str(i[1]) + "'d0"
+            w = int(i[1])   # width
+            init[i[0]] = i[1] + "'d0"
             if len(i)>2:
-                init[i[0]] = str(i[1]) + "'d" + str(i[2])
+                init[i[0]] = i[1] + "'d" + i[2]
 
-            if i[1]>1:
-                txt += '[' + str(i[1]-1) + ':0] '
+            if w>1:
+                txt += '[' + str(w-1) + ':0] '
             else:
                 txt += self.tab
 
@@ -107,9 +108,10 @@ class FsmLog():
         # input definition
         #
         for i in self.vars[0]:
+            w = int(i[1])   # width
             txt += self.tab + 'input      '
-            if i[1]>1:
-                txt += '[' + str(i[1]-1) + ':0] ' + i[0] + ',\n'
+            if w>1:
+                txt += '[' + str(w-1) + ':0] ' + i[0] + ',\n'
             else:
                 txt += self.tab + i[0] + ',\n'
 
@@ -127,13 +129,14 @@ class FsmLog():
         # inner vars definition
         #
         for i in self.vars[2]:
-            init[i[0]] = str(i[1]) + "'d0"
+            w = int(i[1])   # width
+            init[i[0]] = i[1] + "'d0"
             if len(i)>2:
-                init[i[0]] = str(i[1]) + "'d" + str(i[2])
+                init[i[0]] = i[1] + "'d" + i[2]
 
             txt += 'reg '
-            if i[1]>1:
-                txt += '[' + str(i[1]-1) + ':0] '
+            if w>1:
+                txt += '[' + str(w-1) + ':0] '
             else:
                 txt += self.tab
 
@@ -228,7 +231,7 @@ class FsmLog():
 
             for j in i:                 # v1, v2
                 txt += self.tab
-                if j[1] == 1:           # hold
+                if j[1] == '1':           # hold
                     txt  = txt[:-2]
                     txt += '//'
 
