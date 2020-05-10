@@ -43,24 +43,13 @@ class FsmLog():
         txt += '\n'
 
         #######################
-        # hold collection
-        #
-        mode = {}
-        for i in self.vars[1]: # output
-            mode[i[0]] = i[3]
-
-        for i in self.vars[2]: # inner vars
-            mode[i[0]] = i[3]
-
-
-        #######################
         # Nodes
         #
         for i in self.export:       # exp1, exp2
             for j in i:             # v1, v2
                 v = j[0]            # var name
-                h = mode[v]         # hold
-                for k in range(1, len(j), 2):   # out1, out2
+                h = j[1]            # hold
+                for k in range(2, len(j), 2):   # out1, out2
                     if h == 0:
                         nodes[j[k]] += '\\n' + v + '=' + j[k+1]
                     else:
@@ -103,17 +92,16 @@ class FsmLog():
         txt = '\nmodule ' + self.name + ' (\n'
         for i in self.vars[1]:
             txt += self.tab + 'output reg '
-            init[i[0]] = [str(i[1]) + "'d" + str(i[2]), i[3] ]  # i[3]=hold
+            init[i[0]] = str(i[1]) + "'d0"
+            if len(i)>2:
+                init[i[0]] = str(i[1]) + "'d" + str(i[2])
+
             if i[1]>1:
                 txt += '[' + str(i[1]-1) + ':0] '
             else:
                 txt += self.tab
 
-            txt += i[0] + ' = ' + init[i[0]][0] + ','
-            if i[3] == 1:
-                txt += ' // hold\n'
-            else:
-                txt += '\n'
+            txt += i[0] + ' = ' + init[i[0]] + ',\n'
 
         #######################
         # input definition
@@ -139,19 +127,17 @@ class FsmLog():
         # inner vars definition
         #
         for i in self.vars[2]:
-            init[i[0]] = [str(i[1]) + "'d" + str(i[2]), i[3] ]
+            init[i[0]] = str(i[1]) + "'d0"
+            if len(i)>2:
+                init[i[0]] = str(i[1]) + "'d" + str(i[2])
+
             txt += 'reg '
             if i[1]>1:
                 txt += '[' + str(i[1]-1) + ':0] '
             else:
                 txt += self.tab
-            #
-            txt += i[0] + ' = ' + init[i[0]][0] + ';'
-            if i[3] == 1:
-                txt += ' // hold\n'
-            else:
-                txt += '\n'
-            #
+
+            txt += i[0] + ' = ' + init[i[0]] + ';\n'
 
         #print(init)
 
@@ -231,20 +217,24 @@ class FsmLog():
             txt += '\n' + always + ' begin\n'
             if self.reset != []:
                 for j in i:             # v1, v2
-                    txt += self.tab + j[0] + ' <= ' + init[j[0]][0] + ';\n'
+                    txt += self.tab + j[0] + ' <= ' + init[j[0]] + ';\n'
                 #
                 txt += 'end\nelse begin\n'
 
             nodes = {}
             for j in i:                 # v1, v2
-                for k in range(1, len(j), 2):
+                for k in range(2, len(j), 2):
                     nodes[j[k]] = ''
 
             for j in i:                 # v1, v2
-                if init[j[0]][1] == 0:  # NOT hold
-                    txt += self.tab + j[0] + ' <= ' + init[j[0]][0] + ';\n'
+                txt += self.tab
+                if j[1] == 1:           # hold
+                    txt  = txt[:-2]
+                    txt += '//'
+
+                txt += j[0] + ' <= ' + init[j[0]] + ';\n'
                 #
-                for k in range(1, len(j), 2):
+                for k in range(2, len(j), 2):
                     nodes[j[k]] += self.tab*4 + j[0] + ' <= ' + j[k+1] + ';\n'
 
             txt += '\n' + self.tab + 'case (' + st + ')\n'
