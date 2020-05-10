@@ -21,8 +21,8 @@ class FsmLog():
         self.vars    = vars
 
     def dot(self):
-        txt = 'digraph fsm {\nrankdir=LR size="8,5"\n'
-        txt += '"@FsmLog"[shape = "plaintext"]\n\n'
+        txt = 'digraph fsm {\n'    # rankdir=LR size="8,5"\n'
+        #txt += '"@FsmLog"[shape = "plaintext"]\n\n'
 
         #######################
         # Edges
@@ -30,7 +30,7 @@ class FsmLog():
         nodes={}
         for i in self.machine:     # machine1, machine2
             for j in i:  # node1, node2
-                nodes[j[0]]= j[0] + '\\n'
+                nodes[j[0]]= j[0] #+ '\\n'
                 n = len(j)
                 if n%2==0:
                     print('Error: missing items at machine of ', j[0])
@@ -61,13 +61,19 @@ class FsmLog():
                 v = j[0]            # var name
                 h = mode[v]         # hold
                 for k in range(1, len(j), 2):   # out1, out2
-                    if h == 1:
+                    if h == 0:
                         nodes[j[k]] += '\\n' + v + '=' + j[k+1]
                     else:
                         nodes[j[k]] += '\\n' + v + '(' + j[k+1] + ')'
 
+        start_point = True
         for d,x in nodes.items():   # node1, node2
-            txt += d + '[label="' + x + '"]\n'
+            txt += d + '[label="' + x + '"'
+            if start_point:
+                txt += ' style=filled fillcolor=yellow'
+                start_point = not start_point
+
+            txt += ']\n'
 
         txt += '} // @FsmLog'
         return txt
@@ -123,10 +129,10 @@ class FsmLog():
         if self.enable != []:
             txt += self.tab + 'input' + self.tab*2 + self.enable[0] + ',\n'
 
-        txt += self.tab + 'input' + self.tab*2 + self.clock[0]
         if self.reset != []:
-            txt += ',\n' + self.tab + 'input' + self.tab*2 + self.reset[0]
+            txt += self.tab + 'input' + self.tab*2 + self.reset[0] + ',\n'
 
+        txt += self.tab + 'input' + self.tab*2 + self.clock[0]
         txt += '\n);\n\n'
 
         #######################
@@ -260,6 +266,17 @@ class FsmLog():
 
 
 if __name__ == '__main__':
+
+    GVBIN = 'dot.exe'
+    GVFORMAT = 'pdf'
+
+    # read global.cfg
+    fdir = os.path.split(sys.argv[0])[0]
+    if fdir == '': fdir = '.'
+    with open(fdir + '/global.cfg', 'r') as file:
+        exec(file.read())
+
+    # read source.fl
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as file:
             exec(file.read())
@@ -275,7 +292,13 @@ if __name__ == '__main__':
     fg = FsmLog(MACHINE, EXPORT, VARS)
     fg.name = fn
     fg.reset = []
-    #fg.enable = []
+    fg.enable = []
+    if  'CLOCK' in dir():
+        fg.clock = CLOCK
+    if  'RESET' in dir():
+        fg.reset = RESET
+    if 'ENABLE' in dir():
+        fg.enable = ENABLE
 
     src = fg.dot()
     with open(fdir + '/' + fn + '.dot', 'w') as file:
@@ -287,12 +310,12 @@ if __name__ == '__main__':
         file.write(src)
         print("HDL is OK.")
 
-    if os.path.exists(CONFIG[0]):
-        os.system(CONFIG[0] + ' -Tpng ' +
+    if os.path.exists(GVBIN) and os.path.isfile(GVBIN):
+        os.system(GVBIN + ' -T' + GVFORMAT + ' ' +
                     fdir + '/' + fn +'.dot -o ' +
-                    fdir + '/' + fn + '.png')
+                    fdir + '/' + fn + '.' + GVFORMAT)
         print("Image is OK.")
     else:
-        print("'dot.exe' NOT found.")
+        print('GVBIN is NOT found at ' + GVBIN)
 
     sys.exit(0)
