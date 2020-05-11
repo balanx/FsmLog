@@ -16,10 +16,12 @@ class FsmLog():
     enable = ['en', "1'b1"]        # [] is None
     tab  = '  '
 
-    def __init__(self, machine=[[]], export=[[]], vars=[[],[],[]]):
+    def __init__(self, machine=[[]], export=[[]], inputs=[[]], outputs=[[]], regs=[[]] ):
         self.machine = machine
         self.export  = export
-        self.vars    = vars
+        self.inputs  = inputs
+        self.outputs = outputs
+        self.regs    = regs
 
     def dot(self):
         txt = 'digraph fsm {\n'    # rankdir=LR size="8,5"\n'
@@ -91,7 +93,7 @@ class FsmLog():
         #
         init = {}
         txt = '\nmodule ' + self.name + ' (\n'
-        for i in self.vars[1]:
+        for i in self.outputs:
             txt += self.tab + 'output reg '
             w = int(i[1])   # width
             init[i[0]] = i[1] + "'d0"
@@ -108,7 +110,7 @@ class FsmLog():
         #######################
         # input definition
         #
-        for i in self.vars[0]:
+        for i in self.inputs:
             w = int(i[1])   # width
             txt += self.tab + 'input      '
             if w>1:
@@ -129,7 +131,7 @@ class FsmLog():
         #######################
         # inner vars definition
         #
-        for i in self.vars[2]:
+        for i in self.regs:
             w = int(i[1])   # width
             init[i[0]] = i[1] + "'d0"
             if len(i)>2:
@@ -262,6 +264,10 @@ if __name__ == '__main__':
 
     GVBIN = 'dot.exe'
     GVFORMAT = 'pdf'
+    INPUTS =[]
+    OUTPUTS =[]
+    REGS =[]
+    EXPORT = []
 
     # read global.cfg
     fdir = os.path.split(sys.argv[0])[0]
@@ -283,7 +289,7 @@ if __name__ == '__main__':
     if fdir == '': fdir = '.'
     #print(fdir, full_fn, fn)
 
-    fg = FsmLog(MACHINE, EXPORT, VARS)
+    fg = FsmLog(MACHINE, EXPORT, INPUTS, OUTPUTS, REGS)
     fg.name = fn
     fg.reset = []
     fg.enable = []
