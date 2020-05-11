@@ -301,19 +301,19 @@ if __name__ == '__main__':
         fg.enable = ENABLE
 
     src = fg.dot()
-    with open(fdir + '/' + fn + '.dot', 'w') as file:
+    with open('./' + fn + '.dot', 'w') as file:
         file.write(src)
         print("Dot is OK.")
 
     src = fg.hdl()
-    with open(fdir + '/' + fn + '.v', 'w') as file:
+    with open('./' + fn + '.v', 'w') as file:
         file.write(src)
         print("HDL is OK.")
 
     if os.path.exists(GVBIN) and os.path.isfile(GVBIN):
-        os.system(GVBIN + ' -T' + GVFORMAT + ' ' +
-                    fdir + '/' + fn +'.dot -o ' +
-                    fdir + '/' + fn + '.' + GVFORMAT)
+        os.system(GVBIN + ' -T' + GVFORMAT +
+                     ' ./' + fn +'.dot -o' +
+                     ' ./' + fn + '.' + GVFORMAT)
         print("Image is OK.")
     else:
         print('GVBIN is NOT found at ' + GVBIN)

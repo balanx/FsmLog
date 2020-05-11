@@ -59,8 +59,9 @@ if __name__ == '__main__':
         print("file open failed")
         sys.exit(0)
 
-    fdir = os.path.split(sys.argv[1])[0]
-    with open(fdir + './out.txt', 'w') as file:
+    ffn = os.path.split(sys.argv[1])[1]  # name+ext
+    fn = os.path.splitext(ffn)[0]        # name only
+    with open('./' + fn + '.txt', 'w') as file:
         txt = src2list(file_lines)
         file.write(txt)
 
