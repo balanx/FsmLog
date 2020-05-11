@@ -1,0 +1,19 @@
+digraph fsm {
+Z0->Z1[label="i==1'b1"]
+Z1->Z2[label="i==1'b1"]
+Z1->Z0[label="i==1'b0"]
+Z2->E0[label="i==1'b1"]
+Z2->Z0[label="i==1'b0"]
+E0->E1[label="i==1'b0"]
+E1->E2[label="i==1'b0"]
+E1->E0[label="i==1'b1"]
+E2->Z0[label="i==1'b0"]
+E2->E0[label="i==1'b1"]
+
+Z0[label="Z0\ny(1'b0)" style=filled fillcolor=yellow]
+Z1[label="Z1"]
+Z2[label="Z2"]
+E0[label="E0\ny(1'b1)"]
+E1[label="E1"]
+E2[label="E2"]
+} // @FsmLog
