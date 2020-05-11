@@ -1,14 +1,11 @@
+# comment
 
-VARS=[
-[
+INPUTS=[
     [i 1]
 ]
-[
-    [y 1]
-]
-[
-]
 
+OUTPUTS=[
+    [y 1]
 ]
 
 
