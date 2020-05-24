@@ -20,29 +20,31 @@ def src2list(file_lines):
 
     txt = txt.replace('[', ' [ ') # split '[' from others, very important
     txt = txt.replace(']', ' ] ')
+    txt = txt.replace('"', ' " ')
     its = txt.split()  # split by white space
     deep = 0           # deepth of '['
+    quote = False      # "
     for i in range(len(its)):
-        p1 = -1
-        p1 = its[i].find('[')
-        if p1>=0: deep += 1
+        if its[i]=='"': quote = not quote
+        if quote: continue
 
-        p2 = -1
-        p2 = its[i].find(']')
-        if p2>=0: deep -= 1
+        p1 = (its[i]=='[')
+        if p1: deep += 1
+
+        p2 = (its[i]==']')
+        if p2: deep -= 1
 
         if deep>0:
-            p3 = -1
-            p3 = its[i+1].find(']')
+            p3 = (its[i+1]==']')
 
-            if p1== -1 and p2== -1:
+            if not p1 and not p2:
                 its[i] = '"' + its[i] + '"'
-                if p3<0:
+                if not p3:
                     its[i] += ','
-            elif p2==0:     # '],'
-                if p3<0:    # NOT '] ]'
+            elif p2:       # '],'
+                if not p3:    # NOT '] ]'
                     its[i] += ','
-        elif deep==0 and p2>=0:  # ']\nMACHINE=[...'
+        elif deep==0 and p2:  # ']\nMACHINE=[...'
             its[i] += '\n'
 
 
