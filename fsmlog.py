@@ -33,7 +33,7 @@ class FsmLog():
         nodes={}
         for i in self.machine:     # machine1, machine2
             for j in i:  # node1, node2
-                nodes[j[0]]= j[0] #+ '\\n'
+                nodes[j[0]]= [j[0], '']
                 n = len(j)
                 if n%2==0:
                     print('Error: missing items at machine of ', j[0])
@@ -54,20 +54,24 @@ class FsmLog():
                 h = j[1]            # hold
                 for k in range(2, len(j), 2):   # out1, out2
                     if h == '0':
-                        nodes[j[k]] += '\\n' + v + '=' + j[k+1]
-                    else:
-                        nodes[j[k]] += '\\n' + v + '(' + j[k+1] + ')'
+                        nodes[j[k]][0] += '\\n' + v + '=' + j[k+1]
+                    elif h == '1':
+                        nodes[j[k]][0] += '\\n' + v + '(' + j[k+1] + ')'
+                    elif h == '2':
+                        nodes[j[k]][1] += j[0] + '=' + j[k+1] + '\\n'
 
         start_point = True
         for d,x in nodes.items():   # node1, node2
-            txt += d + '[label="' + x + '"'
+            txt += d + '[label="' + x[0] + '"'
             if start_point:
                 txt += ' style=filled fillcolor=yellow'
                 start_point = not start_point
 
             txt += ']\n'
+            if x[1]!='':
+                txt += d + '->' + d + '[color=white, label="' + x[1][:-2] + '"]\n'
 
-        txt += '} // @FsmLog'
+        txt += '} # @FsmLog'
         return txt
 
 
@@ -225,6 +229,10 @@ class FsmLog():
 
                 txt += 'end\nelse begin\n'
 
+            for j in i:                 # v1, v2
+                if j[1] == '2':
+                    txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+
             if self.enable != []:
                 txt += '\n' + self.tab + 'if (' + self.enable[0] + ' == ' + self.enable[1] + ') begin\n'
 
@@ -234,12 +242,14 @@ class FsmLog():
                     nodes[j[k]] = ''
 
             for j in i:                 # v1, v2
-                txt += self.tab*2
-                if j[1] == '1':         # hold
-                    txt  = txt[:-2]
-                    txt += '//'
+                if j[1]=='0' or j[1]=='1':
+                    txt += self.tab*2
+                    if j[1] == '1':         # hold
+                        txt  = txt[:-2]
+                        txt += '//'
 
-                txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
+                    txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
+
                 for k in range(2, len(j), 2):
                     x = j[k+1]
                     nodes[j[k]] += self.tab*4
