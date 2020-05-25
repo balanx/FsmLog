@@ -222,8 +222,11 @@ class FsmLog():
             if self.reset != []:
                 for j in i:             # v1, v2
                     txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
-                #
+
                 txt += 'end\nelse begin\n'
+
+            if self.enable != []:
+                txt += '\n' + self.tab + 'if (' + self.enable[0] + ' == ' + self.enable[1] + ') begin\n'
 
             nodes = {}
             for j in i:                 # v1, v2
@@ -231,13 +234,12 @@ class FsmLog():
                     nodes[j[k]] = ''
 
             for j in i:                 # v1, v2
-                txt += self.tab
+                txt += self.tab*2
                 if j[1] == '1':         # hold
                     txt  = txt[:-2]
                     txt += '//'
 
                 txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
-                #
                 for k in range(2, len(j), 2):
                     x = j[k+1]
                     nodes[j[k]] += self.tab*4
@@ -250,12 +252,15 @@ class FsmLog():
                     else:   # name = var
                         nodes[j[k]] += j[0] + ' <= ' + x + ';\n'
 
-            txt += '\n' + self.tab + 'case (' + st + ')\n'
+            txt += '\n' + self.tab*2 + 'case (' + st + ')\n'
             for k,x in nodes.items():
-                txt += self.tab*2 + k + ' : begin\n' + x + self.tab*3 + 'end\n'
+                txt += self.tab*3 + k + ' : begin\n' + x + self.tab*3 + 'end\n'
 
+            txt += self.tab*2 + 'endcase\n'
+            if self.enable != []:
+                txt += self.tab + 'end\n'
 
-            txt += '\n' + self.tab + 'endcase\nend\n'
+            txt += 'end\n'
             m += 1
 
         #######################
