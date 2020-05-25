@@ -198,7 +198,7 @@ class FsmLog():
                 for k in range(1,n,2):
                     next = j[k]
                     cond = j[k+1]
-                    if cond == '':
+                    if cond == '-':
                         if k > 1:
                             txt += self.tab*3 + 'else\n'
                     elif k > 1:
