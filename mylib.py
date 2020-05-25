@@ -9,6 +9,14 @@ usage : src2list [source]
 '''
 
 
+def log2(n):
+    i = 1
+    while (2**i < n) and (i < 32):
+        i += 1
+
+    return str(i)
+
+
 def src2list(file_lines):
     txt = ''
     for i in file_lines:

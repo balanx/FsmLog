@@ -1,7 +1,7 @@
 #
 import sys
 import os
-from mylib import src2list
+from mylib import src2list, log2
 
 help='''
 
@@ -70,12 +70,6 @@ class FsmLog():
         txt += '} // @FsmLog'
         return txt
 
-    def log2(self, n):
-        i = 1
-        while (2**i < n) and (i < 32):
-            i += 1
-
-        return i
 
     def hdl(self):
         always = 'always @(' + self.clock[1] + ' ' + self.clock[0]
@@ -96,16 +90,18 @@ class FsmLog():
         for i in self.outputs:
             txt += self.tab + 'output reg '
             w = int(i[1])   # width
-            init[i[0]] = i[1] + "'d0"
+            init[i[0]] = [i[1] + "'d"]*2    # {'out': ["1'd", "1'd0"], }
             if len(i)>2:
-                init[i[0]] = i[1] + "'d" + i[2]
+                init[i[0]][1] += i[2]
+            else:
+                init[i[0]][1] += '0'
 
             if w>1:
                 txt += '[' + str(w-1) + ':0] '
             else:
                 txt += self.tab
 
-            txt += i[0] + ' = ' + init[i[0]] + ',\n'
+            txt += i[0] + ' = ' + init[i[0]][1] + ',\n'
 
         #######################
         # input definition
@@ -133,9 +129,11 @@ class FsmLog():
         #
         for i in self.regs:
             w = int(i[1])   # width
-            init[i[0]] = i[1] + "'d0"
+            init[i[0]] = [i[1] + "'d"]*2
             if len(i)>2:
-                init[i[0]] = i[1] + "'d" + i[2]
+                init[i[0]][1] += i[2]
+            else:
+                init[i[0]][1] += '0'
 
             txt += 'reg '
             if w>1:
@@ -143,7 +141,7 @@ class FsmLog():
             else:
                 txt += self.tab
 
-            txt += i[0] + ' = ' + init[i[0]] + ';\n'
+            txt += i[0] + ' = ' + init[i[0]][1] + ';\n'
 
         #print(init)
 
@@ -154,16 +152,16 @@ class FsmLog():
         for i in self.machine:      # machine1, machine2
             st = 'state' + str(m)
             nx =  'next' + str(m)
-            width =  self.log2(len(i))
+            width =  log2(len(i))
 
             txt += '\nlocalparam'
             n = 0
             for j in i:   # node1, node2
-                txt += '\n' + j[0] + ' = ' + str(width) + "'d" + str(n) + ','
+                txt += '\n' + j[0] + ' = ' + width + "'d" + str(n) + ','
                 n += 1
 
             txt = txt[:-1]  # delete the last ','
-            txt += ';\n\nreg [' + str(width - 1) + ':0] ' + st + ', ' + nx + ';\n'
+            txt += ';\n\nreg [' + str(int(width) - 1) + ':0] ' + st + ', ' + nx + ';\n'
 
             txt += always + '\n'
             if self.reset != []:
@@ -223,7 +221,7 @@ class FsmLog():
             txt += '\n' + always + ' begin\n'
             if self.reset != []:
                 for j in i:             # v1, v2
-                    txt += self.tab + j[0] + ' <= ' + init[j[0]] + ';\n'
+                    txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
                 #
                 txt += 'end\nelse begin\n'
 
@@ -234,14 +232,23 @@ class FsmLog():
 
             for j in i:                 # v1, v2
                 txt += self.tab
-                if j[1] == '1':           # hold
+                if j[1] == '1':         # hold
                     txt  = txt[:-2]
                     txt += '//'
 
-                txt += j[0] + ' <= ' + init[j[0]] + ';\n'
+                txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
                 #
                 for k in range(2, len(j), 2):
-                    nodes[j[k]] += self.tab*4 + j[0] + ' <= ' + j[k+1] + ';\n'
+                    x = j[k+1]
+                    nodes[j[k]] += self.tab*4
+                    if x.isdecimal():   # ddd
+                        nodes[j[k]] += j[0] + ' <= ' + init[j[0]][0] + x + ';\n'
+                    elif len(x)>2 and x[:2]=='++' and x[2:].isdecimal():  # ++1
+                        nodes[j[k]] += j[0] + ' <= ' + j[0] + ' + ' + log2(int(x[2:])) + "'d" + x[2:] + ';\n'
+                    elif x[:3]=='if(':
+                        nodes[j[k]] += x + ';\n'
+                    else:   # name = var
+                        nodes[j[k]] += j[0] + ' <= ' + x + ';\n'
 
             txt += '\n' + self.tab + 'case (' + st + ')\n'
             for k,x in nodes.items():
