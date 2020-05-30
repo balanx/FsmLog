@@ -103,8 +103,11 @@ class FsmLog():
     def hdl(self):
         always = 'always @(' + self.clock[1] + 'edge ' + self.clock[0]
         if self.reset != []:
-            always += ' or ' + self.reset[1] + 'edge ' + self.reset[0] + ')\nif ('
-            if self.reset[1] == 'negedge':
+            if self.reset[1] == 'pos' or self.reset[1] == 'neg':
+                always += ' or ' + self.reset[1] + 'edge ' + self.reset[0]
+
+            always += ')\nif ('
+            if self.reset[1] == 'neg' or self.reset[1] == '0':
                 always += '!'
 
             always += self.reset[0]
