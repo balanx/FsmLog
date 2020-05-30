@@ -50,6 +50,7 @@ class FsmLog():
         #
         for i in self.export:       # exp1, exp2
             for j in i:             # v1, v2
+                if j[1]=='9': continue
                 v = j[0]            # var name
                 h = j[1]            # hold
                 for k in range(2, len(j), 2):   # out1, out2
@@ -232,16 +233,26 @@ class FsmLog():
             for j in i:                 # v1, v2
                 if j[1] == '2':
                     txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+                elif j[1]=='9':
+                    txt += self.tab
+                    if j[2][:3]=='if(':
+                        txt += ' '.join(j[2:]) + ';\n'
+                    else:
+                        txt += j[0] + ' <= ' + ' '.join(j[2:]) + ';\n'
 
+            txt += '//following 0,1\n'
             if self.enable != []:
                 txt += '\n' + self.tab + 'if (' + self.enable[0] + ' == ' + self.enable[1] + ') begin\n'
 
             nodes = {}
             for j in i:                 # v1, v2
+                if j[1]=='9': continue
                 for k in range(2, len(j), 2):
                     nodes[j[k]] = ''
 
             for j in i:                 # v1, v2
+                if j[1]=='9': continue
+
                 if j[1]=='0' or j[1]=='1':
                     txt += self.tab*2
                     if j[1] == '1':         # hold
