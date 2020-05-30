@@ -266,8 +266,18 @@ class FsmLog():
                     nodes[j[k]] += self.tab*4
                     if x.isdecimal():   # ddd
                         nodes[j[k]] += j[0] + ' <= ' + init[j[0]][0] + x + ';\n'
-                    elif len(x)>2 and x[:2]=='++' and x[2:].isdecimal():  # ++1
-                        nodes[j[k]] += j[0] + ' <= ' + j[0] + ' + ' + log2(int(x[2:])) + "'d" + x[2:] + ';\n'
+                    elif len(x)>2 and x[:2]=='++':
+                        x = x[2:].split(':')
+                        nodes[j[k]] += j[0] + ' <= ' + j[0] + ' + ' + log2(int(x[0])) + "'d" + x[0] + ';\n'
+                        if len(x)==2:
+                            nodes[j[k]] += self.tab*4 + 'if('
+                            if x[1].isdecimal():
+                                nodes[j[k]] += j[0] + ' >= ' + init[j[0]][0] + x[1]
+                            else:
+                                nodes[j[k]] += x[1]
+
+                            nodes[j[k]] += ') ' + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+
                     elif x[:3]=='if(':
                         nodes[j[k]] += x + ';\n'
                     else:   # name = var
