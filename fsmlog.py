@@ -5,15 +5,39 @@ from mylib import src2list, log2
 
 help='''
 
-usage : fsmlog [source]
+usage : python fsmlog.py [option] source
 
+--clock         name[,pos|neg]
+
+        default is 'clk,pos', i.e. (posedge clk)
+
+--reset         name[,pos|neg|0|1]
+
+        default is 'rst,pos', i.e. (posedge rst)
+
+--reset-none
+
+        there is a reset pin by default, remove it
+
+--enable        name[,0|1]
+
+        default is NO enable pin.
+        e.g. 'en' means 'en,1' i.e. (en==1'b1)
+
+--gv-bin        dot|circo
+
+        e.g. 'D:/graphviz/bin/dot.exe'
+
+--gv-format     pdf|png
+
+        default is pdf
 '''
 
 class FsmLog():
     name = 'fsm'
-    clock  = [  'clk', 'posedge']
-    reset  = ['rst_n', 'negedge']  # [] is None
-    enable = ['en', "1'b1"]        # [] is None
+    clock  = ['clk', 'pos']
+    reset  = ['rst', 'pos'] # ['rst', '1']
+    enable = [] #  ['en', '1']
     tab  = '  '
 
     def __init__(self, machine=[[]], export=[[]], inputs=[[]], outputs=[[]], regs=[[]] ):
@@ -77,9 +101,9 @@ class FsmLog():
 
 
     def hdl(self):
-        always = 'always @(' + self.clock[1] + ' ' + self.clock[0]
+        always = 'always @(' + self.clock[1] + 'edge ' + self.clock[0]
         if self.reset != []:
-            always += ' or ' + self.reset[1] + ' ' + self.reset[0] + ')\nif ('
+            always += ' or ' + self.reset[1] + 'edge ' + self.reset[0] + ')\nif ('
             if self.reset[1] == 'negedge':
                 always += '!'
 
@@ -192,7 +216,7 @@ class FsmLog():
                 txt += self.tab + st + ' <= ' + i[0][0] + ';\nelse '
 
             if self.enable != []:
-                txt += 'if (' + self.enable[0] + ' == ' + self.enable[1] + ')\n'
+                txt += 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ')\n'
             elif self.reset != []:
                 txt = txt[:-1] + '\n'
 
@@ -261,7 +285,7 @@ class FsmLog():
 
             txt += '//following 0,1\n'
             if self.enable != []:
-                txt += '\n' + self.tab + 'if (' + self.enable[0] + ' == ' + self.enable[1] + ') begin\n'
+                txt += '\n' + self.tab + 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ') begin\n'
 
             nodes = {}
             for j in i:                 # v1, v2
@@ -329,13 +353,37 @@ if __name__ == '__main__':
     INPUTS =[]
     OUTPUTS =[]
     REGS =[]
+    MACHINE =[]
     EXPORT = []
+
+    CLOCK  = ['clk', 'pos']
+    RESET  = ['rst', 'pos']
+    ENABLE = []
 
     # read global.cfg
     fdir = os.path.split(sys.argv[0])[0]
     if fdir == '': fdir = '.'
     with open(fdir + '/global.cfg', 'r') as file:
         exec(file.read())
+
+    n = len(sys.argv)
+    i = 1
+    while i<n:
+        if sys.argv[i]=='--clock':
+            CLOCK = sys.argv[i+1].split(',')
+        elif sys.argv[i]=='--reset':
+            RESET = sys.argv[i+1].split(',')
+        elif sys.argv[i]=='--reset-none':
+            RESET = []
+        elif sys.argv[i]=='--enable':
+            ENABLE = sys.argv[i+1].split(',')
+        elif sys.argv[i]=='--gv-bin':
+            GVBIN = sys.argv[i+1]
+        elif sys.argv[i]=='--gv-format':
+            GVFORMAT = sys.argv[i+1]
+
+        i += 1
+
 
     # read source.fl
     if len(sys.argv) > 1:
@@ -353,14 +401,9 @@ if __name__ == '__main__':
 
     fg = FsmLog(MACHINE, EXPORT, INPUTS, OUTPUTS, REGS)
     fg.name = fn
-    fg.reset = []
-    fg.enable = []
-    if  'CLOCK' in dir():
-        fg.clock = CLOCK
-    if  'RESET' in dir():
-        fg.reset = RESET
-    if 'ENABLE' in dir():
-        fg.enable = ENABLE
+    fg.clock = CLOCK
+    fg.reset = RESET
+    fg.enable = ENABLE
 
     src = fg.dot()
     with open('./' + fn + '.dot', 'w') as file:
