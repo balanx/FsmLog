@@ -92,21 +92,32 @@ class FsmLog():
         #
         init = {}
         txt = '\nmodule ' + self.name + ' (\n'
+        assign = ''
         for i in self.outputs:
-            txt += self.tab + 'output reg '
-            w = int(i[1])   # width
-            init[i[0]] = [i[1] + "'d"]*2    # {'out': ["1'd", "1'd0"], }
-            if len(i)>2:
-                init[i[0]][1] += i[2]
+            txt += self.tab + 'output '
+            if len(i)>=4 and i[2]=='=':
+                txt += '    '
+                assign += '\nassign ' + i[0] + ' = ' + ''.join(i[3:]) + ';'
             else:
-                init[i[0]][1] += '0'
+                txt += 'reg '
 
+            w = int(i[1])   # width
             if w>1:
                 txt += '[' + str(w-1) + ':0] '
             else:
-                txt += self.tab
+                txt += '      '
 
-            txt += i[0] + ' = ' + init[i[0]][1] + ',\n'
+            init[i[0]] = [i[1] + "'d"]*2    # {'out': ["1'd", "1'd0"], }
+            if len(i)==3:
+                init[i[0]][1] += i[2]
+            elif len(i)==2:
+                init[i[0]][1] += '0'
+
+            txt += i[0]
+            if len(i)>=4:
+                txt += ',\n'
+            else:
+                txt += ' = ' + init[i[0]][1] + ',\n'
 
         #######################
         # input definition
@@ -117,7 +128,7 @@ class FsmLog():
             if w>1:
                 txt += '[' + str(w-1) + ':0] ' + i[0] + ',\n'
             else:
-                txt += self.tab + i[0] + ',\n'
+                txt += '      ' + i[0] + ',\n'
 
         txt += '\n'
         if self.enable != []:
@@ -127,28 +138,36 @@ class FsmLog():
             txt += self.tab + 'input' + self.tab*2 + self.reset[0] + ',\n'
 
         txt += self.tab + 'input' + self.tab*2 + self.clock[0]
-        txt += '\n);\n\n'
+        txt += '\n);\n'
 
         #######################
         # inner vars definition
         #
+        wire = ''
         for i in self.regs:
             w = int(i[1])   # width
-            init[i[0]] = [i[1] + "'d"]*2
-            if len(i)>2:
-                init[i[0]][1] += i[2]
+            if w>1:
+                w = '[' + str(w-1) + ':0] '
             else:
+                w = self.tab
+
+            if len(i)>=4 and i[2]=='=':
+                wire += '\nwire' + w + i[0] + ' = ' + ''.join(i[3:]) + ';'
+            else:
+                txt += '\nreg ' + w
+
+            init[i[0]] = [i[1] + "'d"]*2
+            if len(i)==3:
+                init[i[0]][1] += i[2]
+            elif len(i)==2:
                 init[i[0]][1] += '0'
 
-            txt += 'reg '
-            if w>1:
-                txt += '[' + str(w-1) + ':0] '
-            else:
-                txt += self.tab
+            if len(i)<4:
+                txt += i[0] + ' = ' + init[i[0]][1] + ';'
 
-            txt += i[0] + ' = ' + init[i[0]][1] + ';\n'
+        if len(wire+assign)>0: txt += '\n'
 
-        #print(init)
+        txt += wire + assign + '\n'
 
         #######################
         # state definition
