@@ -1,0 +1,51 @@
+# comment
+
+INPUTS=[
+    [req   1]
+]
+
+OUTPUTS=[
+    [st     5 = cnt]
+    [we     1]
+    [addr   5]
+    [csn    1 1]
+]
+
+REGS=[
+    [cnt    5]
+    [req_d  2]
+    [gap 1 = (cnt>=3 )]
+    [len 1 = (cnt>=19)]
+]
+
+
+MACHINE=[
+[
+    [IDLE  CS0    "req_d[1]" ]
+    [CS0   DATA   gap ]
+    [DATA  CS1    len ]
+    [CS1   REDY   gap ]
+    [REDY  IDLE   "!req_d[1]" ]
+]
+
+]
+
+
+EXPORT=[
+[
+    [cnt  0
+        CS0  ++1:gap
+        DATA ++1:len
+        CS1  ++1:gap ]
+    [csn  0
+        CS0   0
+        DATA  0 ]
+    [we   2
+        DATA  1 ]
+    [addr  1
+        DATA  cnt ]
+    [req_d 9
+        "{req_d[0], req}" ]
+]
+
+]

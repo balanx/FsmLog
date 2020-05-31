@@ -1,8 +1,9 @@
 
 module filt1 (
-  output reg   y = 1'd0,
-  input        i,
+  output reg       y = 1'd0,
+  input            i,
 
+  input    rst,
   input    clk
 );
 
@@ -16,7 +17,10 @@ E1 = 3'd4,
 E2 = 3'd5;
 
 reg [2:0] state1, next1;
-always @(posedge clk)
+always @(posedge clk or posedge rst)
+if (rst)
+  state1 <= Z0;
+else
   state1 <= next1;
 
 
@@ -55,30 +59,34 @@ always @(*) begin
   endcase
 end
 
-always @(posedge clk) begin
+always @(posedge clk or posedge rst)
+if (rst) begin
   y <= 1'd0;
+end
+else begin
+//following 0,1
+    y <= 1'd0;
 
-  case (state1)
-    Z0 : begin
+    case (state1)
+      Z0 : begin
         y <= 1'b0;
       end
-    Z1 : begin
+      Z1 : begin
         y <= 1'b0;
       end
-    Z2 : begin
+      Z2 : begin
         y <= 1'b0;
       end
-    E0 : begin
+      E0 : begin
         y <= 1'b1;
       end
-    E1 : begin
+      E1 : begin
         y <= 1'b1;
       end
-    E2 : begin
+      E2 : begin
         y <= 1'b1;
       end
-
-  endcase
+    endcase
 end
 
 endmodule // @FsmLog

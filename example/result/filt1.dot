@@ -16,4 +16,4 @@ Z2[label="Z2\ny=1'b0"]
 E0[label="E0\ny=1'b1"]
 E1[label="E1\ny=1'b1"]
 E2[label="E2\ny=1'b1"]
-} // @FsmLog
+} # @FsmLog

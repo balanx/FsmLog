@@ -1,0 +1,14 @@
+digraph fsm {
+IDLE->CS0[label="req_d[1]"]
+CS0->DATA[label="gap"]
+DATA->CS1[label="len"]
+CS1->REDY[label="gap"]
+REDY->IDLE[label="!req_d[1]"]
+
+IDLE[label="IDLE" style=filled fillcolor=yellow]
+CS0[label="CS0\ncnt=++1:gap\ncsn=0"]
+DATA[label="DATA\ncnt=++1:len\ncsn=0\naddr(cnt)"]
+DATA->DATA[color=white, label="we=1"]
+CS1[label="CS1\ncnt=++1:gap"]
+REDY[label="REDY"]
+} # @FsmLog

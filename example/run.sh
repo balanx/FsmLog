@@ -25,5 +25,18 @@ testing filt1
 testing filt2
 testing filt3
 testing filt4
+testing cnt1
+
+/usr/bin/python3  ../../fsmlog.py  ../source/filt4.flg  --reset-none
+diff filt4.v  ../result/filt4-reset-none.v
+printf "  %-30s Done\n" filt4-reset-none
+
+/usr/bin/python3  ../../fsmlog.py  ../source/filt4.flg  --reset-none --enable en,1
+diff filt4.v  ../result/filt4-enable.v
+printf "  %-30s Done\n" filt4-enable
+
+/usr/bin/python3  ../../fsmlog.py  ../source/filt4.flg  --enable en,1
+diff filt4.v  ../result/filt4-enable-reset.v
+printf "  %-30s Done\n" filt4-enable-reset
 
 exit 0

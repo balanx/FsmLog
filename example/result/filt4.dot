@@ -10,4 +10,4 @@ Z0[label="Z0\ny(1'b0)" style=filled fillcolor=yellow]
 Z1[label="Z1\ncnt=cnt+1'b1"]
 E0[label="E0\ny(1'b1)"]
 E1[label="E1\ncnt=cnt+1'b1"]
-} // @FsmLog
+} # @FsmLog
