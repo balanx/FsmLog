@@ -11,7 +11,7 @@ OUTPUTS=[
     [csn    1 1]
 ]
 
-REGS=[
+VARS=[
     [cnt    5]
     [req_d  2]
     [gap 1 = (cnt>=3 )]

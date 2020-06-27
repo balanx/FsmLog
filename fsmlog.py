@@ -40,12 +40,12 @@ class FsmLog():
     enable = [] #  ['en', '1']
     tab  = '  '
 
-    def __init__(self, machine=[[]], export=[[]], inputs=[[]], outputs=[[]], regs=[[]] ):
+    def __init__(self, machine=[[]], export=[[]], inputs=[[]], outputs=[[]], vars=[[]] ):
         self.machine = machine
         self.export  = export
         self.inputs  = inputs
         self.outputs = outputs
-        self.regs    = regs
+        self.vars    = vars
 
     def dot(self):
         txt = 'digraph fsm {\n'    # rankdir=LR size="8,5"\n'
@@ -169,7 +169,7 @@ class FsmLog():
         # inner vars definition
         #
         wire = ''
-        for i in self.regs:
+        for i in self.vars:
             w = int(i[1])   # width
             if w>1:
                 w = '[' + str(w-1) + ':0] '
@@ -342,7 +342,7 @@ if __name__ == '__main__':
     GVFORMAT = 'pdf'
     INPUTS =[]
     OUTPUTS =[]
-    REGS =[]
+    VARS =[]
     MACHINE =[]
     EXPORT = []
 
@@ -389,7 +389,7 @@ if __name__ == '__main__':
     if fdir == '': fdir = '.'
     #print(fdir, full_fn, fn)
 
-    fg = FsmLog(MACHINE, EXPORT, INPUTS, OUTPUTS, REGS)
+    fg = FsmLog(MACHINE, EXPORT, INPUTS, OUTPUTS, VARS)
     fg.name = fn
     fg.clock = CLOCK
     fg.reset = RESET

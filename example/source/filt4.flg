@@ -8,7 +8,7 @@ OUTPUTS=[
     [y 1]
 ]
 
-REGS=[
+VARS=[
     [cnt 4]
 ]
 
