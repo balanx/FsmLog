@@ -10,7 +10,6 @@ OUTPUTS=[
 
 
 MACHINE=[
-[
     [Z0  Z1  i==1'b1]
     [Z1  Z2  i==1'b1
          Z0  i==1'b0]
@@ -23,14 +22,9 @@ MACHINE=[
          E0  i==1'b1]
 ]
 
-]
-
 
 EXPORT=[
-[
     [y 1
         Z0 1'b0
         E0 1'b1]
-]
-
 ]

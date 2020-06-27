@@ -24,35 +24,35 @@ DATA = 3'd2,
 CS1 = 3'd3,
 REDY = 3'd4;
 
-reg [2:0] state1, next1;
+reg [2:0] state, next;
 always @(posedge clk or posedge rst)
 if (rst)
-  state1 <= IDLE;
+  state <= IDLE;
 else
-  state1 <= next1;
+  state <= next;
 
 
 always @(*) begin
-  next1 = state1;
+  next = state;
 
-  case(state1)
+  case(state)
     IDLE :
       if (req_d[1])
-        next1 = CS0;
+        next = CS0;
     CS0 :
       if (gap)
-        next1 = DATA;
+        next = DATA;
     DATA :
       if (len)
-        next1 = CS1;
+        next = CS1;
     CS1 :
       if (gap)
-        next1 = REDY;
+        next = REDY;
     REDY :
       if (!req_d[1])
-        next1 = IDLE;
+        next = IDLE;
     default :
-        next1 = IDLE;
+        next = IDLE;
   endcase
 end
 
@@ -72,7 +72,7 @@ else begin
     csn <= 1'd1;
   //addr <= 5'd0;
 
-    case (state1)
+    case (state)
       CS0 : begin
         cnt <= cnt + 1'd1;
         if(gap) cnt <= 5'd0;

@@ -16,36 +16,36 @@ Z1 = 2'd1,
 E0 = 2'd2,
 E1 = 2'd3;
 
-reg [1:0] state1, next1;
+reg [1:0] state, next;
 always @(posedge clk or posedge rst)
 if (rst)
-  state1 <= Z0;
+  state <= Z0;
 else if (en == 1'b1)
-  state1 <= next1;
+  state <= next;
 
 
 always @(*) begin
-  next1 = state1;
+  next = state;
 
-  case(state1)
+  case(state)
     Z0 :
       if (i==1'b1)
-        next1 = Z1;
+        next = Z1;
     Z1 :
       if (cnt>4'd9)
-        next1 = E0;
+        next = E0;
       else if (i==1'b0)
-        next1 = Z0;
+        next = Z0;
     E0 :
       if (i==1'b0)
-        next1 = E1;
+        next = E1;
     E1 :
       if (cnt>4'd9)
-        next1 = Z0;
+        next = Z0;
       else if (i==1'b1)
-        next1 = E0;
+        next = E0;
     default :
-        next1 = Z0;
+        next = Z0;
   endcase
 end
 
@@ -61,7 +61,7 @@ else begin
   //y <= 1'd0;
     cnt <= 4'd0;
 
-    case (state1)
+    case (state)
       Z0 : begin
         y <= 1'b0;
       end

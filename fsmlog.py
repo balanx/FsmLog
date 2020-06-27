@@ -55,35 +55,33 @@ class FsmLog():
         # Edges
         #
         nodes={}
-        for i in self.machine:     # machine1, machine2
-            for j in i:  # node1, node2
-                nodes[j[0]]= [j[0], '']
-                n = len(j)
-                if n%2==0:
-                    print('Error: missing items at machine of ', j[0])
-                for k in range(1,n,2):
-                    next = j[k]
-                    cond = j[k+1]
-                    edge = j[0] + '->' + next + '[label="' + cond + '"]\n'
-                    txt += edge
+        for j in self.machine:
+            nodes[j[0]]= [j[0], '']
+            n = len(j)
+            if n%2==0:
+                print('Error: missing items at machine of ', j[0])
+            for k in range(1,n,2):
+                next = j[k]
+                cond = j[k+1]
+                edge = j[0] + '->' + next + '[label="' + cond + '"]\n'
+                txt += edge
 
         txt += '\n'
 
         #######################
         # Nodes
         #
-        for i in self.export:       # exp1, exp2
-            for j in i:             # v1, v2
-                if j[1]=='9': continue
-                v = j[0]            # var name
-                h = j[1]            # hold
-                for k in range(2, len(j), 2):   # out1, out2
-                    if h == '0':
-                        nodes[j[k]][0] += '\\n' + v + '=' + j[k+1]
-                    elif h == '1':
-                        nodes[j[k]][0] += '\\n' + v + '(' + j[k+1] + ')'
-                    elif h == '2':
-                        nodes[j[k]][1] += j[0] + '=' + j[k+1] + '\\n'
+        for j in self.export:
+            if j[1]=='9': continue
+            v = j[0]            # var name
+            h = j[1]            # hold
+            for k in range(2, len(j), 2):   # out1, out2
+                if h == '0':
+                    nodes[j[k]][0] += '\\n' + v + '=' + j[k+1]
+                elif h == '1':
+                    nodes[j[k]][0] += '\\n' + v + '(' + j[k+1] + ')'
+                elif h == '2':
+                    nodes[j[k]][1] += j[0] + '=' + j[k+1] + '\\n'
 
         start_point = True
         for d,x in nodes.items():   # node1, node2
@@ -199,146 +197,135 @@ class FsmLog():
         #######################
         # state definition
         #
-        m = 1
-        for i in self.machine:      # machine1, machine2
-            st = 'state' + str(m)
-            nx =  'next' + str(m)
-            width =  log2(len(i))
+        i = self.machine
+        st = 'state'
+        nx = 'next'
+        width =  log2(len(i))
 
-            txt += '\nlocalparam'
-            n = 0
-            for j in i:   # node1, node2
-                txt += '\n' + j[0] + ' = ' + width + "'d" + str(n) + ','
-                n += 1
+        txt += '\nlocalparam'
+        n = 0
+        for j in i:   # node1, node2
+            txt += '\n' + j[0] + ' = ' + width + "'d" + str(n) + ','
+            n += 1
 
-            txt = txt[:-1]  # delete the last ','
-            txt += ';\n\nreg [' + str(int(width) - 1) + ':0] ' + st + ', ' + nx + ';\n'
+        txt = txt[:-1]  # delete the last ','
+        txt += ';\n\nreg [' + str(int(width) - 1) + ':0] ' + st + ', ' + nx + ';\n'
 
-            txt += always + '\n'
-            if self.reset != []:
-                txt += self.tab + st + ' <= ' + i[0][0] + ';\nelse '
+        txt += always + '\n'
+        if self.reset != []:
+            txt += self.tab + st + ' <= ' + i[0][0] + ';\nelse '
 
-            if self.enable != []:
-                txt += 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ')\n'
-            elif self.reset != []:
-                txt = txt[:-1] + '\n'
+        if self.enable != []:
+            txt += 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ')\n'
+        elif self.reset != []:
+            txt = txt[:-1] + '\n'
 
-            txt += self.tab + st + ' <= ' + nx + ';\n\n'
-            m += 1
+        txt += self.tab + st + ' <= ' + nx + ';\n\n'
 
 
         #######################
         # next-state block
         #
-        m = 1
-        for i in self.machine:       # fsm1, fsm2
-            st = 'state' + str(m)
-            nx =  'next' + str(m)
-            txt += '\nalways @(*) begin\n'
-            txt += self.tab + nx + ' = ' + st + ';\n\n'
-            txt += self.tab + 'case(' + st + ')\n'
+        txt += '\nalways @(*) begin\n'
+        txt += self.tab + nx + ' = ' + st + ';\n\n'
+        txt += self.tab + 'case(' + st + ')\n'
 
-            for j in i:  # node1, node2
-                txt += self.tab*2 + j[0] + ' :\n'
-                n = len(j)
-                if n%2==0:
-                    print('Error: missing items at machine of ', j[0])
-                    sys.exit(0)
-                for k in range(1,n,2):
-                    next = j[k]
-                    cond = j[k+1]
-                    if cond == '-':
-                        if k > 1:
-                            txt += self.tab*3 + 'else\n'
-                    elif k > 1:
-                        txt += self.tab*3 + 'else if (' + cond + ')\n'
-                    else:
-                        txt += self.tab*3 + 'if (' + cond + ')\n'
+        for j in i:  # node1, node2
+            txt += self.tab*2 + j[0] + ' :\n'
+            n = len(j)
+            if n%2==0:
+                print('Error: missing items at machine of ', j[0])
+                sys.exit(0)
+            for k in range(1,n,2):
+                next = j[k]
+                cond = j[k+1]
+                if cond == '-':
+                    if k > 1:
+                        txt += self.tab*3 + 'else\n'
+                elif k > 1:
+                    txt += self.tab*3 + 'else if (' + cond + ')\n'
+                else:
+                    txt += self.tab*3 + 'if (' + cond + ')\n'
 
-                    txt += self.tab*4 + nx + ' = ' + next + ';\n'
+                txt += self.tab*4 + nx + ' = ' + next + ';\n'
 
-            txt += self.tab*2 + 'default :\n' + self.tab*4 + nx + ' = ' + i[0][0] + ';\n'
-            txt += self.tab + 'endcase\nend\n'
-            m += 1
+        txt += self.tab*2 + 'default :\n' + self.tab*4 + nx + ' = ' + i[0][0] + ';\n'
+        txt += self.tab + 'endcase\nend\n'
 
-        #sys.exit(0)
         #######################
         # export block
         #
-        m = 1
-        for i in self.export:
-            st = 'state' + str(m)
+        i = self.export
 
-            txt += '\n' + always + ' begin\n'
-            if self.reset != []:
-                for j in i:             # v1, v2
-                    txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+        txt += '\n' + always + ' begin\n'
+        if self.reset != []:
+            for j in i:             # v1, v2
+                txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
 
-                txt += 'end\nelse begin\n'
+            txt += 'end\nelse begin\n'
 
-            for j in i:                 # v1, v2
-                if j[1] == '2':
-                    txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
-                elif j[1]=='9':
-                    txt += self.tab
-                    if j[2][:3]=='if(':
-                        txt += ' '.join(j[2:]) + ';\n'
-                    else:
-                        txt += j[0] + ' <= ' + ' '.join(j[2:]) + ';\n'
+        for j in i:                 # v1, v2
+            if j[1] == '2':
+                txt += self.tab + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+            elif j[1]=='9':
+                txt += self.tab
+                if j[2][:3]=='if(':
+                    txt += ' '.join(j[2:]) + ';\n'
+                else:
+                    txt += j[0] + ' <= ' + ' '.join(j[2:]) + ';\n'
 
-            txt += '//following 0,1\n'
-            if self.enable != []:
-                txt += '\n' + self.tab + 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ') begin\n'
+        txt += '//following 0,1\n'
+        if self.enable != []:
+            txt += '\n' + self.tab + 'if (' + self.enable[0] + " == 1'b" + self.enable[1] + ') begin\n'
 
-            nodes = {}
-            for j in i:                 # v1, v2
-                if j[1]=='9': continue
-                for k in range(2, len(j), 2):
-                    nodes[j[k]] = ''
+        nodes = {}
+        for j in i:                 # v1, v2
+            if j[1]=='9': continue
+            for k in range(2, len(j), 2):
+                nodes[j[k]] = ''
 
-            for j in i:                 # v1, v2
-                if j[1]=='9': continue
+        for j in i:                 # v1, v2
+            if j[1]=='9': continue
 
-                if j[1]=='0' or j[1]=='1':
-                    txt += self.tab*2
-                    if j[1] == '1':         # hold
-                        txt  = txt[:-2]
-                        txt += '//'
+            if j[1]=='0' or j[1]=='1':
+                txt += self.tab*2
+                if j[1] == '1':         # hold
+                    txt  = txt[:-2]
+                    txt += '//'
 
-                    txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
+                txt += j[0] + ' <= ' + init[j[0]][1] + ';\n'
 
-                for k in range(2, len(j), 2):
-                    x = j[k+1]
-                    nodes[j[k]] += self.tab*4
-                    if x.isdecimal():   # ddd
-                        nodes[j[k]] += j[0] + ' <= ' + init[j[0]][0] + x + ';\n'
-                    elif len(x)>2 and x[:2]=='++':
-                        x = x[2:].split(':')
-                        nodes[j[k]] += j[0] + ' <= ' + j[0] + ' + ' + log2(int(x[0])) + "'d" + x[0] + ';\n'
-                        if len(x)==2:
-                            nodes[j[k]] += self.tab*4 + 'if('
-                            if x[1].isdecimal():
-                                nodes[j[k]] += j[0] + ' >= ' + init[j[0]][0] + x[1]
-                            else:
-                                nodes[j[k]] += x[1]
+            for k in range(2, len(j), 2):
+                x = j[k+1]
+                nodes[j[k]] += self.tab*4
+                if x.isdecimal():   # ddd
+                    nodes[j[k]] += j[0] + ' <= ' + init[j[0]][0] + x + ';\n'
+                elif len(x)>2 and x[:2]=='++':
+                    x = x[2:].split(':')
+                    nodes[j[k]] += j[0] + ' <= ' + j[0] + ' + ' + log2(int(x[0])) + "'d" + x[0] + ';\n'
+                    if len(x)==2:
+                        nodes[j[k]] += self.tab*4 + 'if('
+                        if x[1].isdecimal():
+                            nodes[j[k]] += j[0] + ' >= ' + init[j[0]][0] + x[1]
+                        else:
+                            nodes[j[k]] += x[1]
 
-                            nodes[j[k]] += ') ' + j[0] + ' <= ' + init[j[0]][1] + ';\n'
+                        nodes[j[k]] += ') ' + j[0] + ' <= ' + init[j[0]][1] + ';\n'
 
-                    elif x[:3]=='if(':
-                        nodes[j[k]] += x + ';\n'
-                    else:   # name = var
-                        nodes[j[k]] += j[0] + ' <= ' + x + ';\n'
+                elif x[:3]=='if(':
+                    nodes[j[k]] += x + ';\n'
+                else:   # name = var
+                    nodes[j[k]] += j[0] + ' <= ' + x + ';\n'
 
-            txt += '\n' + self.tab*2 + 'case (' + st + ')\n'
-            for k,x in nodes.items():
-                txt += self.tab*3 + k + ' : begin\n' + x + self.tab*3 + 'end\n'
+        txt += '\n' + self.tab*2 + 'case (' + st + ')\n'
+        for k,x in nodes.items():
+            txt += self.tab*3 + k + ' : begin\n' + x + self.tab*3 + 'end\n'
 
-            txt += self.tab*2 + 'endcase\n'
-            if self.enable != []:
-                txt += self.tab + 'end\n'
+        txt += self.tab*2 + 'endcase\n'
+        if self.enable != []:
+            txt += self.tab + 'end\n'
 
-            txt += 'end\n'
-            m += 1
+        txt += 'end\n'
 
         #######################
         # misc

@@ -20,7 +20,6 @@ REGS=[
 
 
 MACHINE=[
-[
     [IDLE  CS0    "req_d[1]" ]
     [CS0   DATA   gap ]
     [DATA  CS1    len ]
@@ -28,11 +27,8 @@ MACHINE=[
     [REDY  IDLE   "!req_d[1]" ]
 ]
 
-]
-
 
 EXPORT=[
-[
     [cnt  0
         CS0  ++1:gap
         DATA ++1:len
@@ -46,6 +42,4 @@ EXPORT=[
         DATA  cnt ]
     [req_d 9
         "{req_d[0], req}" ]
-]
-
 ]
