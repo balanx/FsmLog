@@ -1,0 +1,49 @@
+{
+
+config : { // default
+    clock  : clk
+    reset_name : rst
+    reset_edge : True  // posedge or 1
+    reset_mode : True  // Sync.
+    enable     : ''
+    state_name : state
+    next_name  : next_st
+}
+
+inputs : {
+// width
+    i : 1
+}
+
+
+outputs : {
+// width,  t/h
+    y : [1,  0]
+}
+
+vars : { // internal
+// width,  t/h
+    x : [8,  1]
+}
+
+
+fsm : {
+    S0 : {S1 : "i==1'b1"}
+
+    S1 : {S2 : ["i==1'b1", {x : 1}]
+          S3 : "i==1'b0"}
+
+    S2 : {S0 : "i==1'b1"
+          S4 : ""}
+
+    S3 :  S1
+
+    S4 : {S5 : "i==1'b0"
+          S3 : "i==1'b1"}
+
+    S5 : {S0 : "i==1'b0"
+          S2 : "i==1'b1"
+          y  : 1}
+}
+
+}
