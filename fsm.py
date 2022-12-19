@@ -7,9 +7,7 @@ import hjson
 # import graphviz
 
 help='''
-
-usage : fsmlog [hjson]
-
+usage : fsmlog  src.hjson
 '''
 
 
@@ -135,7 +133,12 @@ def vlog_always_1st() :
     txt += ')\n'
     txt += config['tab']*2 + 'if (' + ('' if config['reset_edge'] else '!') + config['reset_name'] + ')\n'
     txt += config['tab']*4 + config['state_name'] + ' <= ' + config['init_state'] + ' ;\n'
-    txt += config['tab']*2 + 'else\n'
+    txt += config['tab']*2 + 'else'
+
+    if config['enable'] :
+        txt += ' if (' + config['enable'] + ')'
+
+    txt += '\n'
     txt += config['tab']*4 + config['state_name'] + ' <= ' + config['next_name']  + ' ;\n\n'
 
     return txt
