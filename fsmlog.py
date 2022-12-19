@@ -1,4 +1,4 @@
-## https://github.com/balanx/FsmLog
+## https://github.com/balanx/FsmLog/
 
 import sys
 import os
@@ -7,7 +7,7 @@ import hjson
 # import graphviz
 
 help='''
-usage : fsmlog  src.hjson
+usage : python fsmlog src.hjson
 '''
 
 
