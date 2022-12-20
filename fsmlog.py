@@ -4,7 +4,6 @@ import sys
 import os
 import pathlib
 import hjson
-# import graphviz
 
 help='''
 usage : python fsmlog src.hjson
@@ -86,7 +85,7 @@ def get_range_str(n) :
 def vlog_inputs() :
     txt  = ''
     for k,v in src['inputs'].items() :
-        txt += ', input' + config['tab']*3 + get_range_str(v) + '  ' + k + '\n'
+        txt += ', input     ' + get_range_str(v) + '  ' + k + '\n'
 
     return txt
 
@@ -94,7 +93,7 @@ def vlog_inputs() :
 def vlog_outputs() :
     txt  = ''
     for k,v in src['outputs'].items() :
-        txt += ',output' + config['tab']*3 + get_range_str(v[0]) + '  ' + k + '\n'
+        txt += ',output reg ' + get_range_str(v[0]) + '  ' + k + '\n'
 
     txt += ');\n'
     return txt
@@ -202,7 +201,7 @@ def vlog_always_3rd() :
         txt += config['tab']*4 + k + ' <= \'0 ;\n'
 
     txt += config['tab']*2 + 'end\n'
-    txt += config['tab']*2 + 'begin\n'
+    txt += config['tab']*2 + 'else begin\n'
 
 
     for k,v in src['vars'].items() :
@@ -221,6 +220,7 @@ def vlog_always_3rd() :
             txt += '' if i==0 else 'else '
             txt += 'if (' + x + ')\n'
             txt += config['tab']*6 + k + ' <= ' + str(y) + ' ;\n'
+            i += 1
 
     txt += config['tab']*2 + 'end\n'
 

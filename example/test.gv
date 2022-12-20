@@ -3,10 +3,10 @@ rankdir=LR
 size="8,5"
 S0 [style=filled fillcolor=yellow label="S0"]
 S1 [label="S1"]
-S2 [label="S2"]
+S2 [label="S2\ny=1"]
 S3 [label="S3"]
 S4 [label="S4"]
-S5 [label="S5\ny=1"]
+S5 [label="S5\ny=0"]
 S0->S1[label="i==1'b1"]
 S1->S2[label="i==1'b1 // x=1"]
 S1->S3[label="i==1'b0"]
@@ -14,7 +14,7 @@ S2->S0[label="i==1'b1"]
 S2->S4[label=""]
 S3->S1
 S4->S5[label="i==1'b0"]
-S4->S3[label="i==1'b1"]
+S4->S3[label="i==1'b1 // x=2"]
 S5->S0[label="i==1'b0"]
 S5->S2[label="i==1'b1"]
 }

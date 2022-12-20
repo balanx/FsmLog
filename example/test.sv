@@ -2,8 +2,8 @@
 module  test (
   input                clk
 , input                rst
-, input              i
-,output              y
+, input             i
+,output reg         y
 );
 
 reg  [7:0]  x ;
@@ -70,14 +70,18 @@ always @(posedge clk)
         x <= '0 ;
         y <= '0 ;
     end
-    begin
-        y <= '0 ;
+    else begin
+        x <= '0 ;
 
-        if (state == S5)
+        if (state == S2)
             y <= 1 ;
+        else if (state == S5)
+            y <= 0 ;
 
         if (state == S1 && next_st == S2)
             x <= 1 ;
+        else if (state == S4 && next_st == S3)
+            x <= 2 ;
     end
 
 endmodule // fsmlog
