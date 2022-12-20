@@ -159,9 +159,10 @@ def vlog_always_2nd() :
                 if x in src['fsm'] :
                     txt += config['tab']*6 + ('' if i == 0 else 'else ')
 
-                    if isinstance(y, list) :
-                        cond = y[0]
-                        for p,q in y[1].items() : # Mealy export
+                    if isinstance(y, dict) :
+                        cond = y['+']
+                        for p,q in y.items() : # Mealy export
+                            if p=='+' : continue
                             config['export'][p][config['state_name'] + ' == ' + k +
                                         ' && ' + config['next_name'] + ' == ' + x] = q
 
@@ -260,9 +261,10 @@ def dot_build() :
                 if not x in src['fsm'] : continue
 
                 f += k + '->' + x + '[label="'
-                if isinstance(y, list) :
-                    f += y[0]
-                    for p,q in y[1].items() :
+                if isinstance(y, dict) :
+                    f += y['+']
+                    for p,q in y.items() :
+                        if p=='+' : continue
                         f += ' // '
                         f += p + '=' + str(q)
                 else :
