@@ -55,13 +55,20 @@ def initial() :
         for k,v in src['config'].items() :
             conf[k] = v
 
+    if 'inputs' not in src :
+        src['inputs'] = {}
+
     if 'outputs' in src :
         for k,v in src['outputs'].items() :
             conf['export'][k] = {}
+    else :
+        src['outputs'] = {}
 
     if 'vars' in src :
         for k,v in src['vars'].items() :
             conf['export'][k] = {}
+    else :
+        src['vars'] = {}
 
     return conf
 
@@ -169,8 +176,9 @@ def vlog_always_2nd() :
                         cond = y['+']
                         for p,q in y.items() : # Mealy export
                             if p=='+' : continue
-                            config['export'][p][config['state_name'] + ' == ' + k +
-                                        ' && ' + config['next_name'] + ' == ' + x] = q
+                            if len(config['export']) > 0 :
+                                config['export'][p][config['state_name'] + ' == ' + k +
+                                            ' && ' + config['next_name'] + ' == ' + x] = q
 
                     else :
                         cond = y
@@ -182,7 +190,8 @@ def vlog_always_2nd() :
                     txt += config['tab']*8 + config['next_name'] + ' = ' + x + ' ;\n'
                     i += 1
                 else : # Moore export
-                    config['export'][x][config['state_name'] + ' == ' + k] = y
+                    if len(config['export']) > 0 :
+                        config['export'][x][config['state_name'] + ' == ' + k] = y
 
         txt += '\n'
 
