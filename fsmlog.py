@@ -198,10 +198,10 @@ def vlog_always_3rd() :
     txt += config['reset_name'] + ') begin\n'
 
     for k,v in src['vars'].items() :
-        txt += config['tab']*4 + k + ' <= \'0 ;\n'
+        txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     for k,v in src['outputs'].items() :
-        txt += config['tab']*4 + k + ' <= \'0 ;\n'
+        txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     txt += config['tab']*2 + 'end\n'
     txt += config['tab']*2 + 'else begin\n'
@@ -209,11 +209,11 @@ def vlog_always_3rd() :
 
     for k,v in src['vars'].items() :
         if v[1] == 'trig' :
-            txt += config['tab']*4 + k + ' <= \'0 ;\n'
+            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     for k,v in src['outputs'].items() :
         if v[1] == 'trig' :
-            txt += config['tab']*4 + k + ' <= \'0 ;\n'
+            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     for k,v in config['export'].items() :
         i = 0

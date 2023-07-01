@@ -67,11 +67,11 @@ end
 
 always @(posedge clk)
     if (rst) begin
-        x <= '0 ;
-        y <= '0 ;
+        x <= 8'd0 ;
+        y <= 1'd0 ;
     end
     else begin
-        x <= '0 ;
+        x <= 8'd0 ;
 
         if (state == S2)
             y <= 1 ;
