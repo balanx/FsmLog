@@ -3,7 +3,8 @@
 import sys
 import os
 import pathlib
-import hjson
+#import hjson
+import yaml
 
 help='''
 usage : python fsmlog src.hjson
@@ -21,7 +22,8 @@ def log2(n) :
 def read_file(argv) :
     if len(argv) > 1 :
         with open(argv[1], 'r') as f :
-            return hjson.load(f)
+            return yaml.load(f, Loader=yaml.FullLoader)
+            #return hjson.load(f)
     else :
         print(help)
         sys.exit(0)
@@ -281,6 +283,8 @@ def dot_build() :
 if __name__ == '__main__' :
 
     src = read_file(sys.argv)
+    #print(src)
+    #sys.exit(0)
     config = initial()
     config['module'] = get_file_name(sys.argv[1])
 
