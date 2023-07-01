@@ -7,6 +7,8 @@ module  test (
 );
 
 reg  [7:0]  x ;
+wire         f ;
+assign  f = ~x ;
 
 localparam [2:0]
 S0 = 0 ,
@@ -82,6 +84,7 @@ always @(posedge clk)
             x <= 1 ;
         else if (state == S4 && next_st == S3)
             x <= 2 ;
+
     end
 
 endmodule // fsmlog

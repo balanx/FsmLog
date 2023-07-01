@@ -104,7 +104,11 @@ def vlog_outputs() :
 def vlog_vars() :
     txt  = '\n'
     for k,v in src['vars'].items() :
-        txt += 'reg  ' + get_range_str(v[0]) + '  ' + k + ' ;\n'
+        if v[1] == 'wire' :
+            txt += 'wire ' + get_range_str(v[0]) + '  ' + k + ' ;\n'
+            txt += 'assign  ' + k + ' = ' + v[2] + ' ;\n'
+        else :
+            txt += 'reg  ' + get_range_str(v[0]) + '  ' + k + ' ;\n'
 
     return txt
 
@@ -198,10 +202,12 @@ def vlog_always_3rd() :
     txt += config['reset_name'] + ') begin\n'
 
     for k,v in src['vars'].items() :
-        txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+        if v[1] != 'wire' :
+            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     for k,v in src['outputs'].items() :
-        txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+        if v[1] != 'wire' :
+            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     txt += config['tab']*2 + 'end\n'
     txt += config['tab']*2 + 'else begin\n'

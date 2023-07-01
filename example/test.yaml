@@ -22,6 +22,7 @@ outputs :
 vars :  # internal
 # width,  t/h
     x : [8,  trig]
+    f : [1,  wire, ~x]
 
 
 fsm : 
