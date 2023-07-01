@@ -16,12 +16,12 @@ inputs :
 
 outputs : 
 # width,  t/h
-    y : [1,  1]
+    y : [1,  hold]
 
 
 vars :  # internal
 # width,  t/h
-    x : [8,  0]
+    x : [8,  trig]
 
 
 fsm : 
@@ -36,7 +36,7 @@ fsm :
 
     S2 : 
         S0 : i==1'b1
-        S4 : ""
+        S4 : ''
         y  : 1
 
     S3 :  S1

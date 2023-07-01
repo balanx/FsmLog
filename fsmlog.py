@@ -208,11 +208,11 @@ def vlog_always_3rd() :
 
 
     for k,v in src['vars'].items() :
-        if v[1] == 0 :
+        if v[1] == 'trig' :
             txt += config['tab']*4 + k + ' <= \'0 ;\n'
 
     for k,v in src['outputs'].items() :
-        if v[1] == 0 :
+        if v[1] == 'trig' :
             txt += config['tab']*4 + k + ' <= \'0 ;\n'
 
     for k,v in config['export'].items() :
@@ -283,8 +283,8 @@ def dot_build() :
 if __name__ == '__main__' :
 
     src = read_file(sys.argv)
-    #print(src)
-    #sys.exit(0)
+    # print(src)
+    # sys.exit(0)
     config = initial()
     config['module'] = get_file_name(sys.argv[1])
 
