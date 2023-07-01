@@ -53,7 +53,7 @@ always @* begin
         S4 :
             if (i==1'b0)
                 next_st = S5 ;
-            else if (i==1'b1)
+            else 
                 next_st = S3 ;
 
         S5 :

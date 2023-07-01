@@ -173,7 +173,9 @@ def vlog_always_2nd() :
                     txt += config['tab']*6 + ('' if i == 0 else 'else ')
 
                     if isinstance(y, dict) :
-                        cond = y['+']
+                        cond = ''
+                        if '+' in y :
+                            cond = y['+']
                         for p,q in y.items() : # Mealy export
                             if p=='+' : continue
                             if len(config['export']) > 0 :
@@ -279,7 +281,10 @@ def dot_build() :
 
                 f += k + '->' + x + '[label="'
                 if isinstance(y, dict) :
-                    f += y['+']
+                    f += ''
+                    if '+' in y :
+                        f += y['+']
+
                     for p,q in y.items() :
                         if p=='+' : continue
                         f += ' // '
