@@ -1,52 +1,60 @@
 # FsmLog
-Source is a hjson file.
+Sources are Yaml format.
+
 ```
-{
-
-inputs : {
-// width
+inputs : 
+# width
     i : 1
-}
 
-outputs : {
-// width,  t/h
-    y : [1,  1]
-}
 
-vars : { // internal
-// width,  t/h
-    x : [8,  0]
-}
+outputs : 
+# width,  trig/hold/wire
+    y : [1,  hold]
 
-fsm : {
-    S0 : {S1 : "i==1'b1"}
 
-    S1 : {S2 : {+ : "i==1'b1", x : 1}
-          S3 : "i==1'b0"}
+vars :  # internal
+# width,  t/h
+    x : [8,  trig]
+    f : [1,  wire, ~x]
 
-    S2 : {S0 : "i==1'b1"
-          S4 : ""
-          y  : 1}
+
+fsm : 
+    S0 : {S1 : i==1'b1}
+
+    S1 : 
+        S2 :
+            + : i==1'b1
+            x : 1
+
+        S3 : i==1'b0
+
+    S2 : 
+        S0 : i==1'b1
+        S4 : ''   # Unconditional jump
+        y  : 1
 
     S3 :  S1
 
-    S4 : {S5 : "i==1'b0"
-          S3 : {+ : "i==1'b1", x : 2} }
+    S4 : 
+        S5 : i==1'b0
+        S3 : 
+            # Order is priority, and Unconditional must be at the end
+            x : 2
 
-    S5 : {S0 : "i==1'b0"
-          S2 : "i==1'b1"
-          y  : 0}
-}
+    S5 : 
+        S0 : i==1'b0
+        S2 : i==1'b1
+        y  : 0
+```
 
-}
+To generate Verilog-HDL & dot-Graph from a source file.
 ```
-To generate Verilog-HDL & dot-Graph from a hjson file.
-```
-$ python fsmlog.py example/test.hson
+$ python fsmlog.py example/test.yaml
 ```
 
 To view [dot-Graph](http://www.graphviz.org/)
 ```
 $ dot -Tpng test.gv -o test.png
 ```
+
 ![](./example/test.png)
