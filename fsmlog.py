@@ -7,7 +7,7 @@ import argparse
 import yaml
 
 
-parser = argparse.ArgumentParser(description='FSM for verilog')
+parser = argparse.ArgumentParser(description='https://github.com/balanx/FsmLog/')
 parser.add_argument('source', help='yaml format file')
 parser.add_argument('-g', '--graph', action='store_true', help='output graph')
 args = parser.parse_args()
