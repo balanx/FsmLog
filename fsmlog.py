@@ -3,13 +3,14 @@
 import sys
 import os
 import pathlib
-#import hjson
+import argparse
 import yaml
 
-help='''
-usage : python fsmlog src.hjson
-'''
 
+parser = argparse.ArgumentParser(description='FSM for verilog')
+parser.add_argument('source', help='yaml format file')
+parser.add_argument('-g', '--graph', action='store_true', help='output graph')
+args = parser.parse_args()
 
 def log2(n) :
     i = 1
@@ -19,18 +20,13 @@ def log2(n) :
     return i
 
 
-def read_file(argv) :
-    if len(argv) > 1 :
-        with open(argv[1], 'r') as f :
-            return yaml.load(f, Loader=yaml.FullLoader)
-            #return hjson.load(f)
-    else :
-        print(help)
-        sys.exit(0)
+def read_file() :
+    with open(args.source, 'r') as f :
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 
-def get_file_name(argv) :
-    fdir, full_fn = os.path.split(argv)
+def get_file_name() :
+    fdir, full_fn = os.path.split(args.source)
     fn = os.path.splitext(full_fn)[0]  # module name
     #if fdir == '': fdir = '.'
     return fn
@@ -295,18 +291,18 @@ def dot_build() :
                 f += '"]\n'
 
     f += '}\n'
-    out = pathlib.Path(config['module'] + '.gv')
-    out.write_text(f, encoding='utf-8')
-
+    #out = pathlib.Path(config['module'] + '.gv')
+    #out.write_text(f, encoding='utf-8')
+    return f
 
 
 if __name__ == '__main__' :
 
-    src = read_file(sys.argv)
+    src = read_file()
     # print(src)
     # sys.exit(0)
     config = initial()
-    config['module'] = get_file_name(sys.argv[1])
+    config['module'] = get_file_name()
 
     txt  = ''
     txt += vlog_head()
@@ -317,8 +313,14 @@ if __name__ == '__main__' :
     txt += vlog_always_1st()
     txt += vlog_always_2nd()
     txt += vlog_always_3rd()
-
     print(txt)
 
-    dot_build()
+    txt = dot_build()
+    #print(txt)
+    if args.graph :
+        import  graphviz
+        dot=graphviz.Source(txt)
+        #dot.view()  # pdf
+        dot.render(config['module']+'.gv', format='png', view=True)
+
     sys.exit(0)
