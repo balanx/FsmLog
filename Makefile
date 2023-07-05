@@ -2,7 +2,7 @@
 .PHONY: clean run pdf png diff
 
 run :
-	python fsmlog.py ./example/test.yaml > test.v
+	python fsmlog.py -g ./example/test.yaml > test.v
 
 png :
 	dot -Tpng test.gv -o test.png

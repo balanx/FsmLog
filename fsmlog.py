@@ -168,8 +168,8 @@ def vlog_always_2nd() :
                 if x in src['fsm'] :
                     txt += config['tab']*6 + ('' if i == 0 else 'else ')
 
+                    cond = ''
                     if isinstance(y, dict) :
-                        cond = ''
                         if '+' in y :
                             cond = y['+']
                         for p,q in y.items() : # Mealy export
@@ -180,6 +180,9 @@ def vlog_always_2nd() :
 
                     else :
                         cond = y
+
+                    if cond == '+' :
+                        cond = ''
 
                     if cond :
                         txt += 'if (' + cond + ')'
@@ -277,7 +280,6 @@ def dot_build() :
 
                 f += k + '->' + x + '[label="'
                 if isinstance(y, dict) :
-                    f += ''
                     if '+' in y :
                         f += y['+']
 
@@ -285,7 +287,7 @@ def dot_build() :
                         if p=='+' : continue
                         f += ' // '
                         f += p + '=' + str(q)
-                else :
+                elif y != '+' :
                     f += y
 
                 f += '"]\n'

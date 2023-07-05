@@ -20,36 +20,36 @@ output :
 
 
 var :  # internal
-# width,  t/h
+# width,  trig/hold/wire
     x : [8,  trig]
     f : [1,  wire, ~x]
 
 
-fsm : 
+fsm :
     S0 : {S1 : i==1'b1}
 
-    S1 : 
+    S1 :
         S2 :
-            + : i==1'b1
-            x : 1
+            + : i==1'b1   # Jump condition
+            x : 1         # Jump assignment
 
-        S3 : i==1'b0
+        S3 : i==1'b0      # Jump condition
 
-    S2 : 
+    S2 :
         S0 : i==1'b1
-        S4 : ''   # Unconditional jump
-        y  : 1
+        S4 : +      # Unconditional jump
+        y  : 1      # State assignment
 
-    S3 :  S1
+    S3 :  S1        # Unconditional jump
 
-    S4 : 
+    S4 :
         S5 : i==1'b0
-        S3 : 
+        S3 :
             # Order is priority, and Unconditional must be at the end
-            x : 2
+            x : 2   # Jump assignment
 
-    S5 : 
+    S5 :
         S0 : i==1'b0
         S2 : i==1'b1
-        y  : 0
+        y  : 0      # State assignment
 
