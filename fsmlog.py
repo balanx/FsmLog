@@ -51,20 +51,20 @@ def initial() :
         for k,v in src['config'].items() :
             conf[k] = v
 
-    if 'inputs' not in src :
-        src['inputs'] = {}
+    if 'input' not in src :
+        src['input'] = {}
 
-    if 'outputs' in src :
-        for k,v in src['outputs'].items() :
+    if 'output' in src :
+        for k,v in src['output'].items() :
             conf['export'][k] = {}
     else :
-        src['outputs'] = {}
+        src['output'] = {}
 
-    if 'vars' in src :
-        for k,v in src['vars'].items() :
+    if 'var' in src :
+        for k,v in src['var'].items() :
             conf['export'][k] = {}
     else :
-        src['vars'] = {}
+        src['var'] = {}
 
     return conf
 
@@ -89,7 +89,7 @@ def get_range_str(n) :
 
 def vlog_inputs() :
     txt  = ''
-    for k,v in src['inputs'].items() :
+    for k,v in src['input'].items() :
         txt += ', input     ' + get_range_str(v) + '  ' + k + '\n'
 
     return txt
@@ -97,7 +97,7 @@ def vlog_inputs() :
 
 def vlog_outputs() :
     txt  = ''
-    for k,v in src['outputs'].items() :
+    for k,v in src['output'].items() :
         txt += ',output reg ' + get_range_str(v[0]) + '  ' + k + '\n'
 
     txt += ');\n'
@@ -106,7 +106,7 @@ def vlog_outputs() :
 
 def vlog_vars() :
     txt  = '\n'
-    for k,v in src['vars'].items() :
+    for k,v in src['var'].items() :
         if v[1] == 'wire' :
             txt += 'wire ' + get_range_str(v[0]) + '  ' + k + ' ;\n'
             txt += 'assign  ' + k + ' = ' + v[2] + ' ;\n'
@@ -208,11 +208,11 @@ def vlog_always_3rd() :
     txt += ')\n' + config['tab']*2 + 'if (' + ('' if config['reset_edge'] else '!')
     txt += config['reset_name'] + ') begin\n'
 
-    for k,v in src['vars'].items() :
+    for k,v in src['var'].items() :
         if v[1] != 'wire' :
             txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
-    for k,v in src['outputs'].items() :
+    for k,v in src['output'].items() :
         if v[1] != 'wire' :
             txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
@@ -220,11 +220,11 @@ def vlog_always_3rd() :
     txt += config['tab']*2 + 'else begin\n'
 
 
-    for k,v in src['vars'].items() :
+    for k,v in src['var'].items() :
         if v[1] == 'trig' :
             txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
-    for k,v in src['outputs'].items() :
+    for k,v in src['output'].items() :
         if v[1] == 'trig' :
             txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 

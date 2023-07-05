@@ -11,8 +11,8 @@ pdf :
 	dot -Tpdf test.gv -o test.pdf
 
 diff :
-	@diff -Z test.v  ./example/test.v
-	@diff -Z test.gv ./example/test.gv
+	@diff -Zsq test.v  ./example/test.v
+	@diff -Zsq test.gv ./example/test.gv
 
 clean :
 	rm -f test.*

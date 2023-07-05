@@ -2,17 +2,17 @@
 Sources are Yaml format.
 
 ```
-inputs : 
+input :
 # width
     i : 1
 
 
-outputs : 
+output :
 # width,  trig/hold/wire
     y : [1,  hold]
 
 
-vars :  # internal
+var :  # internal
 # width,  t/h
     x : [8,  trig]
     f : [1,  wire, ~x]
@@ -58,3 +58,12 @@ $ dot -Tpng test.gv -o test.png
 ```
 
 ![](./example/test.png)
+
+# Prerequisites
+- Python3 and pip3
+```
+pip3 install pyyaml
+pip3 install graphviz
+```
+
+- Graphviz binaries
