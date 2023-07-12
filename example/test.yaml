@@ -20,36 +20,32 @@ output :
         -   1           # width
         #-   wire        # trig(default)/hold/wire
         -   S2 : 1      # State assignment
-        -   S5 : 0
+        -   S4 : 0
 
 
 var :  # internal variable
     x :     # trig is default
         -   P
         #-   wire
-        -   S4+S3 : 2   # S4 -> S3, Jump assignment
+        -   S2+S3 : 2   # S4 -> S3, Jump assignment
+        -   S4++  : x + 1   # S4 -> S4, Jump assignment
 
-    f : [1,  wire, ~x]
+    f : [1,  wire, ~i]
 
 
 fsm :
-    S0 : {S1 : i==1'b1}
+    S0 : {S1 : f}
 
     S1 : # Order is priority if multi-condition
         S2 : i==1'b1    # Jump condition
         S3 : i==1'b0
 
     S2 : # Unconditional must be at the end
-        S0 : i==1'b1
+        S3 : i==1'b1
         S4 : +      # Unconditional jump
 
-    S3 :  S1        # Unconditional jump
+    S3 :  S4        # Unconditional jump
 
     S4 :
-        S5 : i==1'b0
-        S3 : +
-
-    S5 :
-        S0 : i==1'b0
-        S2 : i==1'b1
+        S0 : x >= 7
 

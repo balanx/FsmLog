@@ -201,26 +201,8 @@ def vlog_always_2nd() :
     return txt
 
 
-def rst_val(x) :
+def init_val(x) :
     return (str(x) + '\'d0') if (isinstance(x, int)) else ('{' + x + '{1\'b0}}')
-
-
-def gv_export(x) :
-
-    for k,v in x :
-
-        i = 0
-        for j in v :
-            if not isinstance(j, dict) : continue
-
-            s = list(j.keys())[0]
-            d = list(j.values())[0]
-            if '+' in s :
-                config['edge'][s] += '//' + k + '=' + str(d)
-            else :
-                config['node'][s] += '\\n' + k + '=' + str(d)
-
-            i += 1
 
 
 def vlog_export(x) :
@@ -231,7 +213,7 @@ def vlog_export(x) :
 
         txt += '\n'
         if ('trig' in v) or ('hold' not in v) :
-            txt += config['tab']*4 + k + ' <= ' + rst_val(v[0]) + ' ;\n'
+            txt += config['tab']*4 + k + ' <= ' + init_val(v[0]) + ' ;\n'
 
         i = 0
         for j in v :
@@ -242,7 +224,10 @@ def vlog_export(x) :
 
             s = list(j.keys())[0]
             d = list(j.values())[0]
-            if '+' in s :
+            if '++' in s :
+                s = s.replace('+', '')
+                cond = config['state_name'] + '==' + s + ' && ' + config['next_name'] + '==' + s
+            elif '+' in s :
                 s = s.split('+')
                 cond = config['state_name'] + '==' + s[0] + ' && ' + config['next_name'] + '==' + s[1]
             else :
@@ -267,11 +252,14 @@ def vlog_export_comb(x, mode=True) : # True is wire, False not
             if i > 0 :
                 txt += config['tab']*4 + 'else '
             else :
-                txt += '\n' + config['tab']*4 + k + ' = ' + rst_val(v[0]) + ' ;\n' + config['tab']*4
+                txt += '\n' + config['tab']*4 + k + ' = ' + init_val(v[0]) + ' ;\n' + config['tab']*4
 
             s = list(j.keys())[0]
             d = list(j.values())[0]
-            if '+' in s :
+            if '++' in s :
+                s = s.replace('+', '')
+                cond = config['state_name'] + '==' + s + ' && ' + config['next_name'] + '==' + s
+            elif '+' in s :
                 s = s.split('+')
                 cond = config['state_name'] + '==' + s[0] + ' && ' + config['next_name'] + '==' + s[1]
             else :
@@ -298,11 +286,11 @@ def vlog_always_3rd() :
 
     for k,v in src['var'].items() :
         if v[1] != 'wire' :
-            txt += config['tab']*4 + k + ' <= ' + rst_val(v[0]) + ' ;\n'
+            txt += config['tab']*4 + k + ' <= ' + init_val(v[0]) + ' ;\n'
 
     for k,v in src['output'].items() :
         if v[1] != 'wire' :
-            txt += config['tab']*4 + k + ' <= ' + rst_val(v[0]) + ' ;\n'
+            txt += config['tab']*4 + k + ' <= ' + init_val(v[0]) + ' ;\n'
 
     txt += config['tab']*2 + 'end\n'
     txt += config['tab']*2 + 'else begin'
@@ -322,10 +310,30 @@ def vlog_always_4th() :
 
     if txt :
         txt  = '\nalways @(*) begin' + txt + 'end\n'
-    else :
-        txt  = '\nendmodule // fsmlog\n'
 
     return txt
+
+
+def gv_export(x) :
+
+    for k,v in x :
+
+        i = 0
+        for j in v :
+            if not isinstance(j, dict) : continue
+
+            s = list(j.keys())[0]
+            d = list(j.values())[0]
+            if '++' in s :
+                s  = s.replace('+', '')
+                s += '+' + s
+                config['edge'][s]  = ' [label="//' + k + '=' + str(d)
+            elif '+' in s :
+                config['edge'][s] += '//' + k + '=' + str(d)
+            else :
+                config['node'][s] += '\\n' + k + '=' + str(d)
+
+            i += 1
 
 
 def dot_build() :
@@ -375,6 +383,7 @@ if __name__ == '__main__' :
     txt += vlog_always_2nd()
     txt += vlog_always_3rd()
     txt += vlog_always_4th()
+    txt += '\nendmodule // fsmlog\n'
     print(txt)
 
     txt = dot_build()
