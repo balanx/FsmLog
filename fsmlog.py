@@ -33,7 +33,7 @@ def get_file_name() :
 
 
 def initial() :
-    conf = {
+    f = {
          'clock' : 'clk',
          'reset_name' : 'rst',
          'reset_edge' :  True , # posedge or 1
@@ -41,32 +41,27 @@ def initial() :
          'enable' : '',
          'state_name' : 'state',
           'next_name' : 'next_st',
-         ##
+         ## local vars
          'module' : '',
-         'init_state' : '',
-         'export' : {},
+      'state_1st' : '',
+           'node' : {},
+           'edge' : {},
             'tab' : '  '  }
 
     if 'config' in src :
         for k,v in src['config'].items() :
-            conf[k] = v
+            f[k] = v
 
-    if 'input' not in src :
+    if 'input'  not in src :
         src['input'] = {}
 
-    if 'output' in src :
-        for k,v in src['output'].items() :
-            conf['export'][k] = {}
-    else :
+    if 'output' not in src :
         src['output'] = {}
 
-    if 'var' in src :
-        for k,v in src['var'].items() :
-            conf['export'][k] = {}
-    else :
+    if 'var' not in src :
         src['var'] = {}
 
-    return conf
+    return f
 
 def vlog_head() :
     txt  = '\nmodule  ' + config['module'] + ' (\n'
@@ -81,8 +76,11 @@ def vlog_head() :
 
 def get_range_str(n) :
     txt  = config['tab']*3
-    if n > 1 :
-        txt = '[' + str(n-1) + ':0]'
+    if isinstance(n, int) :
+        if n > 1 :
+            txt = '[' + str(n-1) + ':0]'
+    else :
+        txt = '[' + n + '-1 :0]'
 
     return txt
 
@@ -122,7 +120,7 @@ def vlog_param() :
     i = 0
     for k,v in src['fsm'].items() :
         if i >= n-1 : break
-        if i == 0 : config['init_state'] = k
+        if i == 0 : config['state_1st'] = k
         txt += k + ' = ' + str(i) + ' ,\n'
         i += 1
 
@@ -140,7 +138,7 @@ def vlog_always_1st() :
 
     txt += ')\n'
     txt += config['tab']*2 + 'if (' + ('' if config['reset_edge'] else '!') + config['reset_name'] + ')\n'
-    txt += config['tab']*4 + config['state_name'] + ' <= ' + config['init_state'] + ' ;\n'
+    txt += config['tab']*4 + config['state_name'] + ' <= ' + config['state_1st'] + ' ;\n'
     txt += config['tab']*2 + 'else'
 
     if config['enable'] :
@@ -159,30 +157,19 @@ def vlog_always_2nd() :
 
     for k,v in src['fsm'].items() :
         txt += config['tab']*4 + k + ' :\n'
+        config['node'][k] = ' [label="' + k
 
         if isinstance(v, str) :
-            txt += config['tab']*6 + config['next_name'] + ' = ' + v + ' ;\n'
+            txt += config['tab']*8 + config['next_name'] + ' = ' + v + ' ;\n'
+            config['edge'][k+'+'+v] = ' [label="'
         else :
             i = 0
             for x,y in v.items() :
                 if x in src['fsm'] :
                     txt += config['tab']*6 + ('' if i == 0 else 'else ')
 
-                    cond = ''
-                    if isinstance(y, dict) :
-                        if '+' in y :
-                            cond = y['+']
-                        for p,q in y.items() : # Mealy export
-                            if p=='+' : continue
-                            if len(config['export']) > 0 :
-                                config['export'][p][config['state_name'] + ' == ' + k +
-                                            ' && ' + config['next_name'] + ' == ' + x] = q
-
-                    else :
-                        cond = y
-
-                    if cond == '+' :
-                        cond = ''
+                    cond = '' if (y=='+') else y
+                    config['edge'][k+'+'+x] = ' [label="' + cond
 
                     if cond :
                         txt += 'if (' + cond + ')'
@@ -190,16 +177,46 @@ def vlog_always_2nd() :
                     txt += '\n'
                     txt += config['tab']*8 + config['next_name'] + ' = ' + x + ' ;\n'
                     i += 1
-                else : # Moore export
-                    if len(config['export']) > 0 :
-                        config['export'][x][config['state_name'] + ' == ' + k] = y
 
         txt += '\n'
 
     txt += config['tab']*4 + 'default :\n'
-    txt += config['tab']*8 + config['next_name'] + ' = ' + config['init_state'] + ' ;\n'
+    txt += config['tab']*8 + config['next_name'] + ' = ' + config['state_1st'] + ' ;\n'
     txt += config['tab']*2 + 'endcase\nend\n'
     return txt
+
+
+def vlog_export(x) :
+
+    y = ''
+    for k,v in x :
+        if  'wire' in v : continue
+
+        y += '\n'
+        if ('trig' in v) or ('hold' not in v) :
+            y += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+
+        i = 0
+        for j in v :
+            if not isinstance(j, dict) : continue
+
+            y += config['tab']*4
+            if i > 0 : y += 'else '
+
+            s = list(j.keys())[0]
+            d = list(j.values())[0]
+            if '+' in s :
+                config['edge'][s] += '//' + k + '=' + str(d)
+                s = s.split('+')
+                cond = config['state_name'] + '==' + s[0] + ' && ' + config['next_name'] + '==' + s[1]
+            else :
+                config['node'][s] += '\\n' + k + '=' + str(d)
+                cond = config[ 'next_name'] + '==' + s
+
+            y += 'if (' + cond + ')' + config['tab']*2 + k + ' <= ' + str(d) + ' ;\n'
+            i += 1
+
+    return y
 
 
 def vlog_always_3rd() :
@@ -220,30 +237,14 @@ def vlog_always_3rd() :
             txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
 
     txt += config['tab']*2 + 'end\n'
-    txt += config['tab']*2 + 'else begin\n'
+    txt += config['tab']*2 + 'else begin'
 
 
-    for k,v in src['var'].items() :
-        if v[1] == 'trig' :
-            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+    txt += vlog_export(src['var'].items() )
+    txt += vlog_export(src['output'].items() )
 
-    for k,v in src['output'].items() :
-        if v[1] == 'trig' :
-            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
-
-    for k,v in config['export'].items() :
-        i = 0
-        txt += '\n'
-        for x,y in v.items() :
-            txt += config['tab']*4
-            txt += '' if i==0 else 'else '
-            txt += 'if (' + x + ')\n'
-            txt += config['tab']*6 + k + ' <= ' + str(y) + ' ;\n'
-            i += 1
 
     txt += config['tab']*2 + 'end\n'
-
-
     txt += '\nendmodule // fsmlog\n'
 
     return txt
@@ -253,44 +254,19 @@ def dot_build() :
     f  = 'digraph fsmlog {\n'
     f += 'rankdir=LR\n'  # LR, UD
     f += 'size="8,5"\n'  # 20,12 / 8,5
-    # f += 'node [shape=circle]'  # doublecircle
 
     i = 0
-    for k,v in src['fsm'].items() :  # nodes
-        f += k + ' ['
+    for k,v in config['node'].items() :
+        f += k + v + '"'
         if i==0 :
-            f += 'style=filled fillcolor=yellow '
+            f += ' style=filled fillcolor=yellow shape=doublecircle'
 
-        f += 'label="' + k
-        if not isinstance(v, str) :
-            for x,y in v.items() :
-                if not x in src['fsm'] :
-                    f += '\\n' + x + '=' + str(y)
-
-        f += '"]\n'
+        f += ']\n'
         i += 1
 
 
-    for k,v in src['fsm'].items() :  # edges
-        if isinstance(v, str) :
-            f += k + '->' + v + '\n'
-        else :
-            for x,y in v.items() :
-                if not x in src['fsm'] : continue
-
-                f += k + '->' + x + '[label="'
-                if isinstance(y, dict) :
-                    if '+' in y :
-                        f += y['+']
-
-                    for p,q in y.items() :
-                        if p=='+' : continue
-                        f += ' // '
-                        f += p + '=' + str(q)
-                elif y != '+' :
-                    f += y
-
-                f += '"]\n'
+    for k,v in config['edge'].items() :
+        f += k.replace('+', '->') + v + '"]\n'
 
     f += '}\n'
     #out = pathlib.Path(config['module'] + '.gv')
@@ -303,6 +279,7 @@ if __name__ == '__main__' :
     src = read_file()
     # print(src)
     # sys.exit(0)
+
     config = initial()
     config['module'] = get_file_name()
 
@@ -325,4 +302,6 @@ if __name__ == '__main__' :
         #dot.view()  # pdf
         dot.render(config['module']+'.gv', format='png', view=True)
 
+    # print(config['node'])
+    # print(config['edge'])
     sys.exit(0)
