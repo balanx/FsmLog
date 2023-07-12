@@ -52,6 +52,9 @@ def initial() :
         for k,v in src['config'].items() :
             f[k] = v
 
+    if 'param'  not in src :
+        src['param'] = {}
+
     if 'input'  not in src :
         src['input'] = {}
 
@@ -63,8 +66,18 @@ def initial() :
 
     return f
 
+
 def vlog_head() :
-    txt  = '\nmodule  ' + config['module'] + ' (\n'
+    txt  = '\nmodule  ' + config['module'] + '\n'
+    if src['param'] :
+        txt += '#(parameter\n'
+        i = 0
+        for k,v in src['param'].items() :
+            txt += ', ' if (i>0) else '  '
+            txt += k + ' = ' + str(v)
+
+        txt += '\n)'
+    txt += '(\n'
     txt += '  input' + config['tab']*8 + config['clock'] + '\n'
     txt += ', input' + config['tab']*8 + config['reset_name'] + '\n'
 
@@ -114,7 +127,7 @@ def vlog_vars() :
     return txt
 
 
-def vlog_param() :
+def vlog_enum() :
     n = len(src['fsm'])
     txt  = '\nlocalparam ' + get_range_str(log2(n)) + '\n'
     i = 0
@@ -136,7 +149,7 @@ def vlog_always_1st() :
     if not config['reset_mode'] :
         txt += ', ' + ('posedge ' if config['reset_edge'] else 'negedge ') + config['reset_name']
 
-    txt += ')\n'
+    txt += ') begin\n'
     txt += config['tab']*2 + 'if (' + ('' if config['reset_edge'] else '!') + config['reset_name'] + ')\n'
     txt += config['tab']*4 + config['state_name'] + ' <= ' + config['state_1st'] + ' ;\n'
     txt += config['tab']*2 + 'else'
@@ -145,7 +158,8 @@ def vlog_always_1st() :
         txt += ' if (' + config['enable'] + ')'
 
     txt += '\n'
-    txt += config['tab']*4 + config['state_name'] + ' <= ' + config['next_name']  + ' ;\n\n'
+    txt += config['tab']*4 + config['state_name'] + ' <= ' + config['next_name']  + ' ;\n'
+    txt += 'end\n'
 
     return txt
 
@@ -230,11 +244,13 @@ def vlog_always_3rd() :
 
     for k,v in src['var'].items() :
         if v[1] != 'wire' :
-            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+            w = (str(v[0]) + '\'d0') if (isinstance(v[0], int)) else ('{' + v[0] + '{1\'b0}}')
+            txt += config['tab']*4 + k + ' <= ' + w + ' ;\n'
 
     for k,v in src['output'].items() :
         if v[1] != 'wire' :
-            txt += config['tab']*4 + k + ' <= ' + str(v[0]) + '\'d0 ;\n'
+            w = (str(v[0]) + '\'d0') if (isinstance(v[0], int)) else ('{' + v[0] + '{1\'b0}}')
+            txt += config['tab']*4 + k + ' <= ' + w + ' ;\n'
 
     txt += config['tab']*2 + 'end\n'
     txt += config['tab']*2 + 'else begin'
@@ -287,9 +303,9 @@ if __name__ == '__main__' :
     txt += vlog_head()
     txt += vlog_inputs()
     txt += vlog_outputs()
-    txt += vlog_vars()
-    txt += vlog_param()
+    txt += vlog_enum()
     txt += vlog_always_1st()
+    txt += vlog_vars()
     txt += vlog_always_2nd()
     txt += vlog_always_3rd()
     print(txt)
